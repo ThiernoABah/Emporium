@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_client"
+        android:icon="@drawable/ic_emoji_people_24px"
+        android:title="Offer"/>
+    <item
+        android:id="@+id/nav_map"
+        android:icon="@drawable/ic_map_24px"
+        android:title="Map"/>
+    <item
+        android:id="@+id/nav_shop"
+        android:icon="@drawable/ic_storefront_24px"
+        android:title="Shop"/>
+    <item
+        android:id="@+id/nav_collection"
+        android:icon="@drawable/ic_work_24px"
+        android:title="Collection"/>
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_person_pin_24px"
+        android:title="Profile"/>
+</menu>

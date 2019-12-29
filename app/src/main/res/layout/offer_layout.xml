@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/offerLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/offerIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <TextView
+        android:id="@+id/offerName"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center|left"
+        android:layout_weight="1"
+        android:layout_marginLeft="10dp"
+        />
+    <TextView
+        android:id="@+id/offerPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center|right"
+        android:layout_weight="1"
+        />
+
+</LinearLayout>

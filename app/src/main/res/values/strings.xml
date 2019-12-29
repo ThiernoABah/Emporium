@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Emporium</string>
+    <string name="buy">Buy</string>
+    <string name="cancel">Cancel</string>
+    <string name="welcome">Welcome</string>
+    <string name="discard">Discard</string>
+</resources>
