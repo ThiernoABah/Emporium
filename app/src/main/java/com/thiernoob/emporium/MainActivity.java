@@ -5,10 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.thiernoob.emporium.adapter.Offer;
@@ -24,6 +26,17 @@ import com.thiernoob.emporium.gameobjects.Player;
 import com.thiernoob.emporium.gameobjects.enums.Location;
 import com.thiernoob.emporium.gameobjects.enums.Rarity;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -36,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private final int NB_RANDOM_ITEMS = 5;
     private final int RANDOM_KARMA = 15;
     private final int RANDOM_MAX_PRICE = 10000;
+    private int OFFER_CPT;
 
     private boolean active;
     private Random rand;
@@ -99,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         this.randomOffers(this.NB_RANDOM_ITEMS);
+        this.OFFER_CPT = listOffer.size();
         this.initMap();
 
         /// Les taches qui font qu'on achete les items du shop ou qu'on recoit de nouvelle offre
@@ -111,7 +126,8 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
                 Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
-                listOffer.add(new Offer(listOffer.size(),15-rand.nextInt(30),new Item("test"+listOffer.size(),rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                listOffer.add(new Offer(OFFER_CPT,15-rand.nextInt(30),new Item("test"+OFFER_CPT,rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                OFFER_CPT++;
             }
         };
 
@@ -136,6 +152,8 @@ public class MainActivity extends AppCompatActivity {
         // PAS DYNAMIQUE
         sch2.scheduleAtFixedRate(offerMaker,2,20, TimeUnit.SECONDS);
         sch2.scheduleAtFixedRate(buyItems,0,2,TimeUnit.SECONDS);
+
+            this.save();
 
     }
 
@@ -227,6 +245,121 @@ public class MainActivity extends AppCompatActivity {
             }
             this.map.add(new Kingdom((l)));
         }
+    }
+
+    public void save() {
+        JSONObject save = new JSONObject();
+        try {
+            // Here we convert Java Object to JSON
+
+
+            JSONObject playerSave = new JSONObject();
+            playerSave.put("pseudo", player.getPseudo() );
+            playerSave.put("gold", player.getGold());
+            playerSave.put("karma", player.getKarma());
+            playerSave.put("location", player.getLocation().toString());
+            playerSave.put("alignment", player.getAlignment().toString());
+
+            save.put("player", playerSave);
+
+
+            JSONArray collection = new JSONArray();
+
+            for (Item i : this.collection ) {
+                JSONObject pnObj = new JSONObject();
+                pnObj.put(String.valueOf(i.getId()), saveItem(i));
+                collection.put(pnObj);
+            }
+
+            save.put("collection", collection);
+
+            JSONArray shop = new JSONArray();
+
+            for (Item i : this.shop ) {
+                JSONObject pnObj = new JSONObject();
+                pnObj.put(String.valueOf(i.getId()), saveItem(i));
+                shop.put(pnObj);
+            }
+
+            save.put("shop", shop);
+
+            JSONArray offers = new JSONArray();
+
+            for (Offer i : this.listOffer ) {
+                JSONObject pnObj = new JSONObject();
+                pnObj.put(String.valueOf(i.getId()), saveOffer(i));
+                offers.put(pnObj);
+            }
+
+            save.put("collection", offers);
+
+        }
+        catch(JSONException ex) {
+            ex.printStackTrace();
+        }
+        String path = Environment.getExternalStorageDirectory().toString()+ "/Emporium/save_file";
+
+        File dir = new File(path);
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        path += "/save.json";
+        try{
+            Writer output = null;
+            File data = new File(path);
+            data.createNewFile();
+            Toast.makeText(getApplicationContext(), String.valueOf(data.canWrite()), Toast.LENGTH_LONG).show();
+            output = new BufferedWriter(new FileWriter(data)); // ERREUR ICI !!
+            output.write(save.toString());
+            output.close();
+        }catch(IOException e){
+            Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+
+
+
+
+    }
+
+    private JSONObject saveItem(Item i){
+        try {
+            // Here we convert Java Object to JSON
+            JSONObject saveItem = new JSONObject();
+            saveItem.put("id", i.getId() );
+            saveItem.put("name", i.getName());
+            saveItem.put("original_price", i.getOriginalPrice());
+            saveItem.put("price", i.getPrice());
+            saveItem.put("type", i.getType().toString());
+            saveItem.put("rarity", i.getRarity().toString());
+            saveItem.put("description", i.getDescription());
+            saveItem.put("timeInShop", i.getTimeInShop());
+
+            return saveItem;
+
+        }
+        catch(JSONException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    private JSONObject saveOffer(Offer o){
+        try {
+            // Here we convert Java Object to JSON
+
+            JSONObject saveOffer = new JSONObject();
+            saveOffer.put("id", o.getId() );
+            saveOffer.put("karma", o.getKarma());
+            saveOffer.put("item", saveItem(o.getItem()));
+
+            return saveOffer;
+        }
+        catch(JSONException ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
 }
