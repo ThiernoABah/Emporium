@@ -17,6 +17,26 @@ public enum Location {
             return "Azir";
         }
     },
+    NARAK{
+        public String toString() {
+            return "Narak";
+        }
+    },
+    RESHI{
+        public String toString() {
+            return "Reshi";
+        }
+    },
+    SHINOVAR{
+        public String toString() {
+            return "Shinovar";
+        }
+    },
+    AIMIA{
+        public String toString() {
+            return "Aimia";
+        }
+    },
     TRAVELING{
         public String toString() {
             return "Traveling";

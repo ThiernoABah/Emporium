@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
                 Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
-                addToOffer(new Offer(listOffer.size(),15-rand.nextInt(30),new Item("test"+listOffer.size(),rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                listOffer.add(new Offer(listOffer.size(),15-rand.nextInt(30),new Item("test"+listOffer.size(),rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
             }
         };
 
@@ -133,9 +133,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        // BUGS BIZARRE
-        //sch.scheduleAtFixedRate(offerMaker,2,10, TimeUnit.SECONDS); // BUG WHITE SCREEN
-        //sch2.scheduleAtFixedRate(buyItems,0,10,TimeUnit.SECONDS);
+        // PAS DYNAMIQUE
+        sch2.scheduleAtFixedRate(offerMaker,2,20, TimeUnit.SECONDS);
+        sch2.scheduleAtFixedRate(buyItems,0,2,TimeUnit.SECONDS);
 
     }
 
@@ -197,8 +197,11 @@ public class MainActivity extends AppCompatActivity {
     public void addToShop(Item i){
         ((ShopFragment)this.shopFrag).addItem(i);
     }
+
     public void buyedFromShop(int position){
-        ((ShopFragment)this.shopFrag).buy(position);
+        // Buy selon la location du player sa donne plus d'argent
+        player.addGold(shop.get(position).getPrice());
+        shop.remove(position);
     }
 
     public void addToOffer(Offer o){
@@ -225,10 +228,5 @@ public class MainActivity extends AppCompatActivity {
             this.map.add(new Kingdom((l)));
         }
     }
-
-
-
-
-
 
 }

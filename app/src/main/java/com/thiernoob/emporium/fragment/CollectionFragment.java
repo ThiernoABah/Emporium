@@ -150,32 +150,32 @@ public class CollectionFragment extends Fragment {
         Item i = collection.get(position);
         // Calcul du temps mini mum a passer dans la boutique difference des prix (prix original et new price ) diviser par la rarete
 
-        int rarityFactor = 1;
-        switch (i.getRarity()){
-            case EPIC:
-                rarityFactor = 2;
-                break;
-            case LEGENDARY:
-                rarityFactor = 1;
-                break;
-            case RARE:
-                rarityFactor = 3;
-                break;
-            case COMMON:
-                rarityFactor = 4;
-                break;
+        int factor = 1;
+        if(newPrice/i.getPrice() > 2){
+            factor = 4;
         }
-        if(newPrice - i.getOriginalPrice()>0){
-            i.setTimeInShop(newPrice-i.getOriginalPrice() / rarityFactor);
+        else if(newPrice/i.getPrice() > 1){
+            factor = 2;
         }
         else{
-            if(newPrice - i.getOriginalPrice()<0){
-                i.setTimeInShop(1);
-            }
-            else{
-                i.setTimeInShop(2);
-            }
+            factor = 1;
         }
+
+        switch (i.getRarity()){
+            case COMMON:
+                i.setTimeInShop(factor * 7);
+                break;
+            case RARE:
+                i.setTimeInShop(factor * 10);
+                break;
+            case EPIC:
+                i.setTimeInShop(factor * 13);
+                break;
+            case LEGENDARY:
+                i.setTimeInShop(factor * 20);
+                break;
+        }
+
         i.setPrice(newPrice);
         adapter.remove(collection.get(position));
         activity.addToShop(i);
