@@ -77,6 +77,10 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
+        File f = new File(this.getFilesDir().getAbsolutePath()+"/save.json");
+if(f.exists()){
+    Toast.makeText(getApplicationContext(), "EXIST", Toast.LENGTH_LONG).show();
+}
         this.active = true;
         this.rand = new Random();
 
@@ -291,13 +295,46 @@ public class MainActivity extends AppCompatActivity {
                 offers.put(pnObj);
             }
 
-            save.put("collection", offers);
+            save.put("offers", offers);
 
         }
         catch(JSONException ex) {
             ex.printStackTrace();
         }
-        String path = Environment.getExternalStorageDirectory().toString()+ "/Emporium/save_file";
+
+        Log.d("SAVE",save.toString());
+
+        String filename = "save.json";
+        File file = new File(this.getFilesDir(),filename);
+        FileWriter writer = null;
+        BufferedWriter buffWriter = null;
+
+        if(!(file.exists())){
+            try{
+                file.createNewFile();
+                writer = new FileWriter(file.getAbsoluteFile());
+                Toast.makeText(getApplicationContext(), file.getAbsoluteFile().toString(), Toast.LENGTH_LONG).show();
+                buffWriter = new BufferedWriter(writer);
+                buffWriter.write(save.toString());
+                buffWriter.close();
+            }catch (IOException e){
+                Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+        else{
+            try{
+                writer = new FileWriter(file.getAbsoluteFile());
+                Toast.makeText(getApplicationContext(), file.getAbsoluteFile().toString(), Toast.LENGTH_LONG).show();
+                buffWriter = new BufferedWriter(writer);
+                buffWriter.write(save.toString());
+                buffWriter.close();
+            }catch (IOException e){
+                Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+        /*String path = Environment.getExternalStorageDirectory().toString()+ "/Emporium/save_file";
 
         File dir = new File(path);
 
@@ -316,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
         }catch(IOException e){
             Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_LONG).show();
             e.printStackTrace();
-        }
+        }*/
 
 
 
