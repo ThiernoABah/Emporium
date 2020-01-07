@@ -25,5 +25,26 @@ public enum Categories {
         public String toString() {
             return "Spell";
         }
+    };
+
+    public static Categories value(String v) {
+        if (v.equals("Shield")) {
+            return SHIELD;
+        }
+        else if (v.equals("Spell")) {
+            return SPELL;
+        }
+        else if (v.equals("Ingredient")) {
+            return INGREDIENT;
+        }
+        else if (v.equals("Weapon")) {
+            return WEAPON;
+        }
+        else if (v.equals("Consumable")) {
+            return CONSUMABLE;
+        }
+        else{
+            return CONSUMABLE;
+        }
     }
 }

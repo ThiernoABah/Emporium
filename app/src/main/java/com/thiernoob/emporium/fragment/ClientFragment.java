@@ -3,7 +3,6 @@ package com.thiernoob.emporium.fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,11 +23,8 @@ import com.thiernoob.emporium.adapter.Offer;
 import com.thiernoob.emporium.adapter.OfferAdapter;
 import com.thiernoob.emporium.gameobjects.Item;
 import com.thiernoob.emporium.gameobjects.Player;
-import com.thiernoob.emporium.gameobjects.enums.Categories;
-import com.thiernoob.emporium.gameobjects.enums.Rarity;
 
 import java.util.List;
-import java.util.Random;
 
 public class ClientFragment extends Fragment {
 

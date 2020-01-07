@@ -89,6 +89,18 @@ public class Player {
         return location;
     }
 
+    public void setGold(int gold) {
+        this.gold = gold;
+    }
+
+    public void setKarma(int karma) {
+        this.karma = karma;
+    }
+
+    public void setAlignment(Align alignment) {
+        this.alignment = alignment;
+    }
+
     public Align getAlignment() {
         return alignment;
     }
