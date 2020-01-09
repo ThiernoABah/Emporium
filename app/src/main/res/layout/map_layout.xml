@@ -9,11 +9,11 @@
     <TextView
         android:id="@+id/kingdomName"
         android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:textSize="12sp"
+        android:layout_height="80dp"
+        android:textSize="16sp"
         android:paddingTop="4dp"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
-        android:gravity="center_horizontal"/>
+        android:gravity="center"/>
 
 </LinearLayout>

@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class Player {
 
-    private final int STARTUP_GOLD = 10000;
+    private final int STARTUP_GOLD = 20000;
     private final int STARTUP_KARMA = 50;
 
     private static Player player = null;
@@ -53,6 +53,13 @@ public class Player {
 
     public void updateKarma(int karma) {
         this.karma += karma;
+
+        if(this.karma > 100){
+            this.karma = 100;
+        }
+        if(this.karma < -50){
+            this.karma = -50;
+        }
         this.updateAlign();
     }
 
@@ -61,7 +68,7 @@ public class Player {
         if (this.karma < 0) {
             this.alignment = Align.CHAOTIC;
         } else {
-            if (this.karma < 100) {
+            if (this.karma < 50) {
                 this.alignment = Align.NEUTRAL;
             } else {
                 this.alignment = Align.LAWFUL;

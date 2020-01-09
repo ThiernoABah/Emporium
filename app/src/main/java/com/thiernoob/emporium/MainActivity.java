@@ -19,6 +19,7 @@ import com.thiernoob.emporium.fragment.MapFragment;
 import com.thiernoob.emporium.fragment.OffersFragment;
 import com.thiernoob.emporium.fragment.ProfileFragment;
 import com.thiernoob.emporium.fragment.ShopFragment;
+import com.thiernoob.emporium.gameobjects.InitialiseItems;
 import com.thiernoob.emporium.gameobjects.Item;
 import com.thiernoob.emporium.gameobjects.Kingdom;
 import com.thiernoob.emporium.gameobjects.Player;
@@ -47,14 +48,8 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private String SAVE_FILENAME = "save.json";
-
-    private int PERCENTAGE_BONUS = 10;
-
-    ////////// For Randoms Offers testing purpose //////////
-    private final int NB_RANDOM_ITEMS = 5;
-    private final int RANDOM_KARMA = 15;
-    private final int RANDOM_MAX_PRICE = 10000;
-    ///////////////////////////////////////////////////////
+    private int PERCENTAGE_BONUS = 5;
+    private int MAX_OFFERS = 15;
 
     private int OFFER_CPT;
 
@@ -62,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
 
     // The object that represent the player (Singleton)
     private Player player;
+
+    // All possible Items
+    private ArrayList<Item> items;
 
     // Fragments
     private Fragment offersFrag;
@@ -147,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
         this.player = Player.getPlayer();
         this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
 
+        this.items = InitialiseItems.InitialiseItems().getAllItems();
+
         this.listOffer = new ArrayList<>();
         this.collection = new ArrayList<>();
         this.shop = new ArrayList<>();
@@ -176,17 +176,22 @@ public class MainActivity extends AppCompatActivity {
         // ThreadPoolExecutor charged to run the following thread to simulate a good behaviour
         ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
 
-        // This runnable is charged to make new offers as time passes
+        // This runnable is charged to make new offers as time passes and remove old offers if the player didnt took his chance
         Runnable offerMaker = new Runnable() {
             @Override
             public void run() {
                 // Randoms item for now
-                Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
-                Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
                 OFFER_CPT++;
 
                 if (!offersFrag.isVisible()) {
-                    listOffer.add(new Offer(OFFER_CPT, 15 - rand.nextInt(30), new Item("test" + OFFER_CPT, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                    if(listOffer.size() <= MAX_OFFERS){
+                        Item item = items.get(rand.nextInt(items.size()));
+                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item),item));
+                    }
+                    else{
+                        listOffer.remove(0);
+                    }
+
                 }
 
             }
@@ -221,25 +226,38 @@ public class MainActivity extends AppCompatActivity {
 
 
         sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(autoSave, 2, 60, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(buyItems, 2, 3, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(autoSave, 2, 30, TimeUnit.SECONDS);
     }
 
+    public int computeKarma(Item i){
+
+        switch (i.getType()){
+            case CONSUMABLE:
+                return 8;
+            case SPELL:
+                return rand.nextInt(20)-10;
+            case SHIELD:
+                return -3;
+            case INGREDIENT:
+                return 1;
+            case WEAPON:
+                return -8;
+        }
+        return 0;
+    }
     public void firstConnection() {
         // Init variables, inflate fragment and set nav bar
         this.initialise();
         // Generating random Offers for now
-        this.randomOffers(this.NB_RANDOM_ITEMS);
+        //this.randomOffers(5);
     }
 
     public void randomOffers(int nb) {
         Random rand = new Random();
-        Categories cat;
-        Rarity rar;
         for (int i = 0; i < nb; i++) {
-            cat = Categories.values()[rand.nextInt(Categories.values().length)];
-            rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
-            this.listOffer.add(new Offer(i, RANDOM_KARMA - rand.nextInt(2 * RANDOM_KARMA), new Item("test" + i, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+            Item item = this.items.get(rand.nextInt(this.items.size()));
+            this.listOffer.add(new Offer(i, this.computeKarma(item),item));
         }
     }
 
@@ -495,78 +513,17 @@ public class MainActivity extends AppCompatActivity {
     public void buying(int position) {
 
         if (!shopFrag.isVisible()) {
-            switch (this.player.getLocation()){
-                case AZIR:
-                    if(shop.get(position).getType() == Categories.CONSUMABLE){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case AIMIA:
-                    if(shop.get(position).getType() == Categories.INGREDIENT){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case ALETHKAR:
-                    if(shop.get(position).getType() == Categories.WEAPON || shop.get(position).getType() == Categories.SHIELD ){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case JAH_KEVED:
-                    if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.INGREDIENT || shop.get(position).getType() == Categories.CONSUMABLE){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case NARAK:
-                    if(shop.get(position).getType() == Categories.SHIELD || shop.get(position).getType() == Categories.INGREDIENT){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case RESHI:
-                    if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.WEAPON ){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case SHINOVAR:
-                    if(shop.get(position).getType() == Categories.CONSUMABLE || shop.get(position).getType() == Categories.INGREDIENT ){
-                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
-                        this.player.addGold(money);
-                    }
-                    else{
-                        this.player.addGold(shop.get(position).getPrice());
-                    }
-                    break;
-                case TRAVELING:
-                    this.player.addGold(shop.get(position).getPrice());
-                    break;
 
+            if(Kingdom.bonusOn(this.player.getLocation(),shop.get(position).getType() )){
+                int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                this.player.addGold(money);
             }
+            else{
+                this.player.addGold(shop.get(position).getPrice());
+            }
+
             this.shop.remove(position);
         }
-
 
     }
 

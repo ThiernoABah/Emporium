@@ -37,6 +37,21 @@ public enum Location {
             return "Aimia";
         }
     },
+    BONTA{
+        public String toString() {
+            return "Bonta";
+        }
+    },
+    BRAKMAR{
+        public String toString() {
+            return "Brakmar";
+        }
+    },
+    ASTRUB{
+        public String toString() {
+            return "Astrub";
+        }
+    },
     TRAVELING{
         public String toString() {
             return "Traveling";
@@ -67,6 +82,15 @@ public enum Location {
         }
         else if (v.equals("Narak")) {
             return NARAK;
+        }
+        else if (v.equals("Bonta")) {
+            return BONTA;
+        }
+        else if (v.equals("Brakmar")) {
+            return BRAKMAR;
+        }
+        else if (v.equals("Astrub")) {
+            return ASTRUB;
         }
         else{
             return AZIR;

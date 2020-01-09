@@ -101,7 +101,4 @@ public class ShopFragment extends Fragment {
         toast.show();
     }
 
-    public ItemAdapter getAdapter() {
-        return adapter;
-    }
 }

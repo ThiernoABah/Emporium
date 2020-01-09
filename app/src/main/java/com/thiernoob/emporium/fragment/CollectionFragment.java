@@ -148,7 +148,10 @@ public class CollectionFragment extends Fragment {
         // Calculing the time that the item should passes in the shop based on its rarety and original price
 
         int factor = 1;
-        if(newPrice/i.getPrice() > 2){
+        if(newPrice/i.getPrice() > 4){
+            factor = 10;
+        }
+        else if(newPrice/i.getPrice() > 2){
             factor = 4;
         }
         else if(newPrice/i.getPrice() > 1){

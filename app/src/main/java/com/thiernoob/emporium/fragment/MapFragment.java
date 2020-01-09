@@ -37,6 +37,9 @@ import java.util.concurrent.TimeUnit;
 
 public class MapFragment extends Fragment {
 
+    private int MIN_TRAVEL_TIME = 4;
+    private int MAX_TRAVEL_TIME = 10;
+
     private Player player;
     private MainActivity activity;
     private List<Kingdom> map;
@@ -46,6 +49,8 @@ public class MapFragment extends Fragment {
     private GridView gv;
     private TextView location;
 
+    ScheduledThreadPoolExecutor sch;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,7 +58,7 @@ public class MapFragment extends Fragment {
         activity = (MainActivity) getActivity();
         player = Player.getPlayer();
         map = activity.getMap();
-
+        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
         adapter = new MapAdapter(this.getContext(),R.layout.map_layout,map);
     }
 
@@ -68,6 +73,7 @@ public class MapFragment extends Fragment {
         this.location.setText(player.getLocation().toString());
         gv = v.findViewById(R.id.grid_map);
         gv.setAdapter(this.adapter);
+
         gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -98,22 +104,12 @@ public class MapFragment extends Fragment {
         title.setTextSize(25);
         builder.setCustomTitle(title);
 
-        builder.setMessage("Do you want to travel from "+Player.getPlayer().getLocation()+" to "+map.get(position).getKingdom().toString()+" ?");
+        String message = Kingdom.kingdomBonus(map.get(position).getKingdom())+"\n\n"+"Do you want to travel from "+Player.getPlayer().getLocation()+" to "+map.get(position).getKingdom().toString()+" ?";
+        builder.setMessage(message);
 
         builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1);
-                Random r = new Random();
-                Runnable travel = new Runnable() {
-                    @Override
-                    public void run() {
-                        Player.getPlayer().setLocation(map.get(position).getKingdom());
-                        location.setText(Player.getPlayer().getLocation().toString());
-                    }
-                };
-                Player.getPlayer().setLocation(Location.TRAVELING);
-                location.setText(Location.TRAVELING.toString());
-                sch.schedule(travel,5 + r.nextInt(5), TimeUnit.SECONDS);
+                travel(map.get(position).getKingdom());
             }
         });
         builder.setNeutralButton(R.string.no, new DialogInterface.OnClickListener() {
@@ -126,4 +122,20 @@ public class MapFragment extends Fragment {
 
         dialog.show();
     }
+
+    public void travel(final Location position){
+        Random r = new Random();
+        Runnable tripEnd = new Runnable() {
+            @Override
+            public void run() {
+                Player.getPlayer().setLocation(position);
+                location.setText(Player.getPlayer().getLocation().toString());
+            }
+        };
+        Player.getPlayer().setLocation(Location.TRAVELING);
+        location.setText(Location.TRAVELING.toString());
+        sch.schedule(tripEnd,MIN_TRAVEL_TIME + r.nextInt(MAX_TRAVEL_TIME), TimeUnit.SECONDS);
+    }
+
+
 }
