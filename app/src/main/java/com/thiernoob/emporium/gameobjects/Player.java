@@ -25,7 +25,11 @@ public class Player {
         this.karma = STARTUP_KARMA;
         this.alignment = Align.NEUTRAL;
         Random rand = new Random();
-        this.location = Location.values()[rand.nextInt(Location.values().length)];
+        Location l = Location.TRAVELING;
+        while(l == Location.TRAVELING){
+            l =  Location.values()[rand.nextInt(Location.values().length)];
+        }
+        this.location = l ;
     }
 
     public static Player getPlayer() {

@@ -111,4 +111,8 @@ public class OffersFragment extends Fragment {
             toast.show();
         }
     }
+
+    public void addOffer(Offer o) {
+        adapter.add(o);
+    }
 }

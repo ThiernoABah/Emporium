@@ -100,4 +100,8 @@ public class ShopFragment extends Fragment {
         Toast toast = Toast.makeText(context, text, duration);
         toast.show();
     }
+
+    public ItemAdapter getAdapter() {
+        return adapter;
+    }
 }

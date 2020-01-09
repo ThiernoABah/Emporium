@@ -1,5 +1,7 @@
 package com.thiernoob.emporium;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.Window;
@@ -12,9 +14,9 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.thiernoob.emporium.adapter.Offer;
-import com.thiernoob.emporium.fragment.OffersFragment;
 import com.thiernoob.emporium.fragment.CollectionFragment;
 import com.thiernoob.emporium.fragment.MapFragment;
+import com.thiernoob.emporium.fragment.OffersFragment;
 import com.thiernoob.emporium.fragment.ProfileFragment;
 import com.thiernoob.emporium.fragment.ShopFragment;
 import com.thiernoob.emporium.gameobjects.Item;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String SAVE_FILENAME = "save.json";
 
-    private int PERCENTAGE_BONUS = 15;
+    private int PERCENTAGE_BONUS = 10;
 
     ////////// For Randoms Offers testing purpose //////////
     private final int NB_RANDOM_ITEMS = 5;
@@ -130,8 +132,7 @@ public class MainActivity extends AppCompatActivity {
             };
 
     public void initMap() {
-        for (Location l :
-                Location.values()) {
+        for (Location l : Location.values()) {
             if (l == Location.TRAVELING) {
                 continue;
             }
@@ -182,8 +183,12 @@ public class MainActivity extends AppCompatActivity {
                 // Randoms item for now
                 Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
                 Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
-                listOffer.add(new Offer(OFFER_CPT, 15 - rand.nextInt(30), new Item("test" + OFFER_CPT, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
                 OFFER_CPT++;
+
+                if (!offersFrag.isVisible()) {
+                    listOffer.add(new Offer(OFFER_CPT, 15 - rand.nextInt(30), new Item("test" + OFFER_CPT, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                }
+
             }
         };
 
@@ -215,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        sch.scheduleAtFixedRate(offerMaker, 2, 25, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(autoSave, 2, 60, TimeUnit.SECONDS);
     }
@@ -285,10 +290,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void reset() {
-        // delete save file
+        // delete save file and reset game
         String filename = SAVE_FILENAME;
         File file = new File(this.getFilesDir(), filename);
         file.delete();
+
+        Intent returnIntent = new Intent();
+        setResult(Activity.RESULT_CANCELED, returnIntent);
+        finish();
     }
 
     public void save() {
@@ -484,76 +493,81 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buying(int position) {
-        switch (this.player.getLocation()){
-            case AZIR:
-                if(shop.get(position).getType() == Categories.CONSUMABLE){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case AIMIA:
-                if(shop.get(position).getType() == Categories.INGREDIENT){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case ALETHKAR:
-                if(shop.get(position).getType() == Categories.WEAPON || shop.get(position).getType() == Categories.SHIELD ){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case JAH_KEVED:
-                if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.INGREDIENT || shop.get(position).getType() == Categories.CONSUMABLE){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case NARAK:
-                if(shop.get(position).getType() == Categories.SHIELD || shop.get(position).getType() == Categories.INGREDIENT){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case RESHI:
-                if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.WEAPON ){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case SHINOVAR:
-                if(shop.get(position).getType() == Categories.CONSUMABLE || shop.get(position).getType() == Categories.INGREDIENT ){
-                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
-                    this.player.addGold(money);
-                }
-                else{
-                    this.player.addGold(shop.get(position).getPrice());
-                }
-                break;
-            case TRAVELING:
-                this.player.addGold(shop.get(position).getPrice());
-                break;
 
+        if (!shopFrag.isVisible()) {
+            switch (this.player.getLocation()){
+                case AZIR:
+                    if(shop.get(position).getType() == Categories.CONSUMABLE){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case AIMIA:
+                    if(shop.get(position).getType() == Categories.INGREDIENT){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case ALETHKAR:
+                    if(shop.get(position).getType() == Categories.WEAPON || shop.get(position).getType() == Categories.SHIELD ){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case JAH_KEVED:
+                    if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.INGREDIENT || shop.get(position).getType() == Categories.CONSUMABLE){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case NARAK:
+                    if(shop.get(position).getType() == Categories.SHIELD || shop.get(position).getType() == Categories.INGREDIENT){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case RESHI:
+                    if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.WEAPON ){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case SHINOVAR:
+                    if(shop.get(position).getType() == Categories.CONSUMABLE || shop.get(position).getType() == Categories.INGREDIENT ){
+                        int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+                        this.player.addGold(money);
+                    }
+                    else{
+                        this.player.addGold(shop.get(position).getPrice());
+                    }
+                    break;
+                case TRAVELING:
+                    this.player.addGold(shop.get(position).getPrice());
+                    break;
+
+            }
+            this.shop.remove(position);
         }
-        this.shop.remove(position);
+
+
     }
 
 }

@@ -1,5 +1,6 @@
 package com.thiernoob.emporium;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -35,45 +36,58 @@ public class LogActivity extends AppCompatActivity {
         if (file.exists()) {
             this.defaultLogIn();
         } else {
-            pseudo = findViewById(R.id.pseudo);
-            startButt = findViewById(R.id.startButt);
-            pseudo.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-                @Override
-                public void afterTextChanged(Editable s) {
-                    if (s.length() > 0) {
-                        startButt.setEnabled(true);
-                    } else {
-                        startButt.setEnabled(false);
-                    }
-                }
-            });
-            startButt.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    logIn();
-                }
-            });
+            this.firstConnection();
         }
 
 
     }
 
+    public void firstConnection(){
+        pseudo = findViewById(R.id.pseudo);
+        startButt = findViewById(R.id.startButt);
+        pseudo.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() > 0) {
+                    startButt.setEnabled(true);
+                } else {
+                    startButt.setEnabled(false);
+                }
+            }
+        });
+        startButt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logIn();
+            }
+        });
+    }
     public void logIn() {
         Intent intent = new Intent(this, MainActivity.class);
         String p = pseudo.getText().toString();
         intent.putExtra("PSEUDO", p);
-        startActivity(intent);
+        startActivityForResult(intent,1);
     }
 
     public void defaultLogIn() {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("PSEUDO", DEFAULT_PSEUDO);
-        startActivity(intent);
+        startActivityForResult(intent,1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_CANCELED) {
+                this.firstConnection();
+            }
+        }
     }
 }
