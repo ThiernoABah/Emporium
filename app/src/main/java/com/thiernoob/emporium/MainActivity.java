@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private String SAVE_FILENAME = "save.json";
     private int PERCENTAGE_BONUS = 5;
     private int MAX_OFFERS = 15;
+    private int FIRST_OFFERS = 5;
 
     private int OFFER_CPT;
 
@@ -250,16 +251,18 @@ public class MainActivity extends AppCompatActivity {
         // Init variables, inflate fragment and set nav bar
         this.initialise();
         // Generating random Offers for now
-        //this.randomOffers(5);
+        this.firstOffers(FIRST_OFFERS);
     }
 
-    public void randomOffers(int nb) {
+    public void firstOffers(int nb) {
         Random rand = new Random();
         for (int i = 0; i < nb; i++) {
             Item item = this.items.get(rand.nextInt(this.items.size()));
             this.listOffer.add(new Offer(i, this.computeKarma(item),item));
         }
     }
+
+
 
     private void writeJsonToFile(JSONObject save){
         File file = new File(this.getFilesDir(), SAVE_FILENAME);
