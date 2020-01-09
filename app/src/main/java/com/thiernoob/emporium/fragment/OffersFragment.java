@@ -34,7 +34,7 @@ public class OffersFragment extends Fragment {
     private OfferAdapter adapter;
 
     private ListView lv;
-    private TextView remaining;
+
 
 
 
@@ -51,8 +51,7 @@ public class OffersFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v =  inflater.inflate(R.layout.fragment_offers,container,false);
-        remaining = v.findViewById(R.id.remainingGold);
-        remaining.setText(player.getGold()+" $");
+
         lv = v.findViewById(R.id.offerListView);
         lv.setAdapter(this.adapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -99,10 +98,11 @@ public class OffersFragment extends Fragment {
         int karma = listOffer.get(position).getKarma();
         if (player.getGold() >= i.getPrice()) {
             player.giveGold(i.getPrice());
-            remaining.setText(player.getGold()+" $");
+
             player.updateKarma(karma);
             adapter.remove(listOffer.get(position));
             activity.addToCollection(i);
+            activity.majRemainingGold();
         } else {
             Context context = lv.getContext();
             CharSequence text = "To poor for this...";
@@ -112,7 +112,4 @@ public class OffersFragment extends Fragment {
         }
     }
 
-    public void addOffer(Offer o) {
-        adapter.add(o);
-    }
 }

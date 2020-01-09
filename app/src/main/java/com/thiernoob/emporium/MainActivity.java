@@ -3,9 +3,11 @@ package com.thiernoob.emporium;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private int PERCENTAGE_BONUS = 5;
     private int MAX_OFFERS = 15;
     private int FIRST_OFFERS = 5;
+    private int SAVE_RATE = 25; // every 25 seconds there a save
 
     private int OFFER_CPT;
 
@@ -75,6 +78,19 @@ public class MainActivity extends AppCompatActivity {
     private List<Item> shop;
     private List<Kingdom> map;
 
+    // Remaining gold view
+    TextView mainRemainingGold;
+
+    ScheduledThreadPoolExecutor sch;
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        player.destroy();
+        if(this.sch != null)
+            this.sch.shutdown();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,15 +99,17 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-        File f = new File(this.getFilesDir().getAbsolutePath() + "/"+SAVE_FILENAME);
-        if (f.exists()) {
-            this.charge(f);
-        } else {
+        File f = new File(this.getFilesDir().getAbsolutePath() + "/" + SAVE_FILENAME);
+        if (!f.exists()) {
             this.firstConnection();
+        } else {
+            this.charge(f);
         }
 
         this.OFFER_CPT = listOffer.size(); // To set the id of new offers
         this.initMap(); // Initialising the map (always the same map, map is just use to travel)
+
+        this.majRemainingGold();
 
         // Initalise some process to make the game "alive"
         this.lauchBackgroundProcess();
@@ -122,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
 
                     }
-                    if(selectedFrag == null){
+                    if (selectedFrag == null) {
                         return false;
                     }
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFrag).commit();
@@ -130,16 +148,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-    public void initMap() {
-        for (Location l : Location.values()) {
-            if (l == Location.TRAVELING) {
-                continue;
-            }
-            this.map.add(new Kingdom((l)));
-        }
+    public void firstConnection() {
+        // Init variables, inflate fragment and set nav bar
+        this.initialise();
+
+        // Generating random Offers for now
+        this.firstOffers(FIRST_OFFERS);
     }
 
-    public void initialise(){
+    public void initialise() {
         /////////// INITIALISATION //////////
         this.rand = new Random();
 
@@ -158,6 +175,9 @@ public class MainActivity extends AppCompatActivity {
         this.mapFrag = new MapFragment();
         this.shopFrag = new ShopFragment();
         this.profileFrag = new ProfileFragment();
+
+        this.mainRemainingGold = findViewById(R.id.mainRemainingGold);
+
         /////////////////////////////////////////
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
@@ -171,11 +191,23 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
 
+        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
+
     }
 
-    private void lauchBackgroundProcess(){
+    public void initMap() {
+        for (Location l : Location.values()) {
+            if (l == Location.TRAVELING) {
+                continue;
+            }
+            this.map.add(new Kingdom((l)));
+        }
+    }
+
+
+    private void lauchBackgroundProcess() {
         // ThreadPoolExecutor charged to run the following thread to simulate a good behaviour
-        ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
+        //ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
 
         // This runnable is charged to make new offers as time passes and remove old offers if the player didnt took his chance
         Runnable offerMaker = new Runnable() {
@@ -185,11 +217,10 @@ public class MainActivity extends AppCompatActivity {
                 OFFER_CPT++;
 
                 if (!offersFrag.isVisible()) {
-                    if(listOffer.size() <= MAX_OFFERS){
+                    if (listOffer.size() <= MAX_OFFERS) {
                         Item item = items.get(rand.nextInt(items.size()));
-                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item),item));
-                    }
-                    else{
+                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
+                    } else {
                         listOffer.remove(0);
                     }
 
@@ -228,16 +259,16 @@ public class MainActivity extends AppCompatActivity {
 
         sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(buyItems, 2, 3, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(autoSave, 2, 30, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
     }
 
-    public int computeKarma(Item i){
+    public int computeKarma(Item i) {
 
-        switch (i.getType()){
+        switch (i.getType()) {
             case CONSUMABLE:
                 return 8;
             case SPELL:
-                return rand.nextInt(20)-10;
+                return rand.nextInt(20) - 10;
             case SHIELD:
                 return -3;
             case INGREDIENT:
@@ -247,24 +278,18 @@ public class MainActivity extends AppCompatActivity {
         }
         return 0;
     }
-    public void firstConnection() {
-        // Init variables, inflate fragment and set nav bar
-        this.initialise();
-        // Generating random Offers for now
-        this.firstOffers(FIRST_OFFERS);
-    }
+
 
     public void firstOffers(int nb) {
         Random rand = new Random();
         for (int i = 0; i < nb; i++) {
             Item item = this.items.get(rand.nextInt(this.items.size()));
-            this.listOffer.add(new Offer(i, this.computeKarma(item),item));
+            this.listOffer.add(new Offer(i, this.computeKarma(item), item));
         }
     }
 
 
-
-    private void writeJsonToFile(JSONObject save){
+    private void writeJsonToFile(JSONObject save) {
         File file = new File(this.getFilesDir(), SAVE_FILENAME);
 
         FileWriter writer = null;
@@ -283,6 +308,8 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             try {
+                file.delete();
+                file.createNewFile();
                 writer = new FileWriter(file.getAbsoluteFile());
                 buffWriter = new BufferedWriter(writer);
                 buffWriter.write(save.toString());
@@ -294,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String readJsonFromFile(File f){
+    private String readJsonFromFile(File f) {
         StringBuilder text = new StringBuilder();
         try {
             BufferedReader br = new BufferedReader(new FileReader(f));
@@ -314,7 +341,9 @@ public class MainActivity extends AppCompatActivity {
         // delete save file and reset game
         String filename = SAVE_FILENAME;
         File file = new File(this.getFilesDir(), filename);
-        file.delete();
+        Log.d("File deleted", String.valueOf(file.delete()));
+        player.destroy();
+        this.sch.shutdown();
 
         Intent returnIntent = new Intent();
         setResult(Activity.RESULT_CANCELED, returnIntent);
@@ -322,6 +351,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void save() {
+        if(player.getLocation() == Location.TRAVELING){
+            player.setLocation(player.getLastLocation());
+        }
         // Save Game state to a Json Object
         JSONObject save = new JSONObject();
         try {
@@ -382,7 +414,6 @@ public class MainActivity extends AppCompatActivity {
             this.player.setGold(Integer.valueOf(player.get("gold").toString()));
             this.player.setKarma(Integer.valueOf(player.get("karma").toString()));
             this.player.setAlignment(Align.value(player.get("alignment").toString()));
-
 
 
             JSONArray offers = lastSave.getJSONArray("offers");
@@ -505,6 +536,10 @@ public class MainActivity extends AppCompatActivity {
         return map;
     }
 
+    public void majRemainingGold() {
+        this.mainRemainingGold.setText(this.player.getGold() + " $");
+    }
+
     public void addToCollection(Item i) {
         this.collection.add(i);
     }
@@ -517,17 +552,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (!shopFrag.isVisible()) {
 
-            if(Kingdom.bonusOn(this.player.getLocation(),shop.get(position).getType() )){
-                int money = shop.get(position).getPrice() + Math.round( (shop.get(position).getPrice() *PERCENTAGE_BONUS )/100 );
+            if (Kingdom.bonusOn(this.player.getLocation(), shop.get(position).getType())) {
+                int money = shop.get(position).getPrice() + Math.round((shop.get(position).getPrice() * PERCENTAGE_BONUS) / 100);
                 this.player.addGold(money);
-            }
-            else{
+
+            } else {
                 this.player.addGold(shop.get(position).getPrice());
             }
-
+            this.mainRemainingGold.setText(this.player.getGold() + " $");
             this.shop.remove(position);
         }
 
     }
+
 
 }

@@ -39,6 +39,9 @@ public class OfferAdapter extends ArrayAdapter<Offer> {
         final ImageView icon = convertView.findViewById(R.id.offerIcon);
 
         name.setText(offers.get(position).getItem().getName());
+
+        // When the item is on the offer adapter it reset it price
+        offers.get(position).getItem().setPrice(offers.get(position).getItem().getOriginalPrice());
         int v = offers.get(position).getItem().getPrice();
         price.setText(v+"$");
 

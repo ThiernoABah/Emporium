@@ -16,6 +16,7 @@ public class Player {
     private int gold;
     private int karma;
     private Location location;
+    private Location last_location;
     private Align alignment;
 
 
@@ -28,6 +29,7 @@ public class Player {
         Location l = Location.TRAVELING;
         while(l == Location.TRAVELING){
             l =  Location.values()[rand.nextInt(Location.values().length)];
+            last_location = l;
         }
         this.location = l ;
     }
@@ -45,6 +47,7 @@ public class Player {
 
     public void addGold(int gold) {
         this.gold += gold;
+
     }
 
     public void giveGold(int gold) {
@@ -76,8 +79,16 @@ public class Player {
         }
     }
 
+    public void destroy()
+    {
+        player = null;
+    }
+
     public void setLocation(Location location) {
         this.location = location;
+    }
+    public void setLastLocation(Location location) {
+        this.last_location = location;
     }
 
 
@@ -95,6 +106,9 @@ public class Player {
 
     public Location getLocation() {
         return location;
+    }
+    public Location getLastLocation() {
+        return last_location;
     }
 
     public void setGold(int gold) {

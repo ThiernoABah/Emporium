@@ -103,12 +103,15 @@ public class CollectionFragment extends Fragment {
 
         ((TextView)sellingDial.findViewById(R.id.item_description)).setText(collection.get(position).getDescription()+"\n Item Buyed at : "+collection.get(position).getOriginalPrice());
 
-        sellingButton =((Button)sellingDial.findViewById(R.id.selling_button));
-        sellingPrice = ((EditText)(sellingDial.findViewById(R.id.selling_price)));
+
+        sellingPrice = (sellingDial.findViewById(R.id.selling_price));
+        sellingButton = (sellingDial.findViewById(R.id.selling_button));
+
 
         sellingPrice.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                sellingButton.setEnabled(false);
             }
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -123,6 +126,7 @@ public class CollectionFragment extends Fragment {
                 }
             }
         });
+        sellingButton.setEnabled(false);
         sellingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -144,6 +148,7 @@ public class CollectionFragment extends Fragment {
     public void vending(int position ){
         String np = sellingPrice.getText().toString();
         int newPrice=Integer.parseInt(np);
+
         Item i = collection.get(position);
         // Calculing the time that the item should passes in the shop based on its rarety and original price
 

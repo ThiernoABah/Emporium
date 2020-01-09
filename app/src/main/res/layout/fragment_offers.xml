@@ -3,37 +3,12 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@color/colorAccent">
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/remainingGoldLayout"
-        android:layout_width="match_parent"
-        android:layout_height="26dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimaryDark"
-            android:gravity="left"
-            android:text="@string/remaining_gold"
-            android:textSize="16dp"
-            android:layout_weight="1"/>
-
-        <TextView
-            android:id="@+id/remainingGold"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimaryDark"
-            android:gravity="right"
-            android:textSize="16dp"
-            android:layout_weight="1"/>
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <ListView
         android:id="@+id/offerListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
+
         />
 
 </RelativeLayout>

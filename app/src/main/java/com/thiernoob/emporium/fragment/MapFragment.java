@@ -132,6 +132,7 @@ public class MapFragment extends Fragment {
                 location.setText(Player.getPlayer().getLocation().toString());
             }
         };
+        Player.getPlayer().setLastLocation(position);
         Player.getPlayer().setLocation(Location.TRAVELING);
         location.setText(Location.TRAVELING.toString());
         sch.schedule(tripEnd,MIN_TRAVEL_TIME + r.nextInt(MAX_TRAVEL_TIME), TimeUnit.SECONDS);
