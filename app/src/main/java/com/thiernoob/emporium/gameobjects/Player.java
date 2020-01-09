@@ -19,17 +19,16 @@ public class Player {
     private Align alignment;
 
 
-    private Player(){
+    private Player() {
 
         this.gold = STARTUP_GOLD;
         this.karma = STARTUP_KARMA;
         this.alignment = Align.NEUTRAL;
         Random rand = new Random();
-        this.location = Location.values()[rand.nextInt(Location.values().length )];
+        this.location = Location.values()[rand.nextInt(Location.values().length)];
     }
 
-    public static Player getPlayer()
-    {
+    public static Player getPlayer() {
         if (player == null)
             player = new Player();
 
@@ -55,14 +54,12 @@ public class Player {
 
 
     public void updateAlign() {
-        if(this.karma < 0){
+        if (this.karma < 0) {
             this.alignment = Align.CHAOTIC;
-        }
-        else{
-            if(this.karma < 100){
+        } else {
+            if (this.karma < 100) {
                 this.alignment = Align.NEUTRAL;
-            }
-            else{
+            } else {
                 this.alignment = Align.LAWFUL;
             }
         }

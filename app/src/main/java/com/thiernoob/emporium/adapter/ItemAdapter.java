@@ -43,6 +43,31 @@ public class ItemAdapter extends ArrayAdapter<Item> {
         int v = objects.get(position).getPrice();
         price.setText(v+"$");
 
+        setIcons(icon,position);
+
+        setRarityColor(convertView,position);
+
+        return convertView;
+    }
+
+    private void setRarityColor(View convertView, int position){
+        switch (objects.get(position).getRarity()){
+            case COMMON:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.communColor));
+                break;
+            case RARE:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.rareColor));
+                break;
+            case EPIC:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.epicColor));
+                break;
+            case LEGENDARY:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.legendaryColor));
+                break;
+        }
+    }
+
+    private void setIcons(ImageView icon, int position){
         switch (objects.get(position).getType()){
             case CONSUMABLE:
                 icon.setImageResource(R.drawable.ic_poison);
@@ -60,22 +85,6 @@ public class ItemAdapter extends ArrayAdapter<Item> {
                 icon.setImageResource(R.drawable.ic_mortar);
                 break;
         }
-
-        switch (objects.get(position).getRarity()){
-            case COMMON:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.communColor));
-                break;
-            case RARE:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.rareColor));
-                break;
-            case EPIC:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.epicColor));
-                break;
-            case LEGENDARY:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.legendaryColor));
-                break;
-        }
-
-        return convertView;
     }
 }
+

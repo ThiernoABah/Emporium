@@ -31,10 +31,8 @@ public class ShopFragment extends Fragment {
     private MainActivity activity;
     private List<Item> shop;
 
-    // FAIRE UN COLLECTION ADAPTER
     private ItemAdapter adapter;
 
-    // PEUT ETRE FAIRE UNE GRID
     private ListView lv;
 
     @Override
@@ -44,7 +42,6 @@ public class ShopFragment extends Fragment {
         player = Player.getPlayer();
         shop = activity.getShop();
 
-        // FAIRE UN COLLECTION ITEM LAYOUT
         adapter = new ItemAdapter(this.getContext(),R.layout.offer_layout,shop);
     }
 
@@ -64,17 +61,6 @@ public class ShopFragment extends Fragment {
         return v;
     }
 
-    public void addItem(Item i ){
-        adapter.add(i);
-    }
-
-    public void buy(int position){
-
-        // ADD Bonus selon la zone dans laquelle est le player
-        player.addGold(this.shop.get(position).getPrice());
-        adapter.remove(this.shop.get(position));
-        //adapter.notifyDataSetChanged();
-    }
 
     public void alertDialogFire(final int position){
         AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext(),R.style.dialogMessage);

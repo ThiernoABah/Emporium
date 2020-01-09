@@ -16,6 +16,10 @@ import java.io.File;
 
 public class LogActivity extends AppCompatActivity {
 
+    private final String SAVE_FILENAME = "save.json";
+    private final String DEFAULT_PSEUDO = "Kaladin";
+
+
     private Button startButt;
     private EditText pseudo;
 
@@ -26,32 +30,10 @@ public class LogActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_log);
 
-        String filename = "save.json";
-        File file = new File(this.getFilesDir(), filename);
+        File file = new File(this.getFilesDir(), SAVE_FILENAME);
 
         if (file.exists()) {
-            pseudo = findViewById(R.id.pseudo);
-            startButt = findViewById(R.id.startButt);
-            pseudo.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    if (s.length() > 0) {
-                        startButt.setEnabled(true);
-                    } else {
-                        startButt.setEnabled(false);
-                    }
-                }
-            });
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
+            this.defaultLogIn();
         } else {
             pseudo = findViewById(R.id.pseudo);
             startButt = findViewById(R.id.startButt);
@@ -59,11 +41,9 @@ public class LogActivity extends AppCompatActivity {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 }
-
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                 }
-
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (s.length() > 0) {
@@ -88,6 +68,12 @@ public class LogActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         String p = pseudo.getText().toString();
         intent.putExtra("PSEUDO", p);
+        startActivity(intent);
+    }
+
+    public void defaultLogIn() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("PSEUDO", DEFAULT_PSEUDO);
         startActivity(intent);
     }
 }

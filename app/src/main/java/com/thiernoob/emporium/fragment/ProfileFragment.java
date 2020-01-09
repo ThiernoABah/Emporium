@@ -40,8 +40,8 @@ public class ProfileFragment extends Fragment {
         ((TextView) v.findViewById(R.id.profileAlign)).setText("Aligment : " + player.getAlignment().toString());
         ((TextView) v.findViewById(R.id.profileKarma)).setText("Karma : " + player.getKarma());
         ((TextView) v.findViewById(R.id.profileGold)).setText("Gold : " + player.getGold() + " $");
-        reseter = (Button) v.findViewById(R.id.resetButton);
-        saver = (Button) v.findViewById(R.id.saveButton);
+        reseter = v.findViewById(R.id.resetButton);
+        saver = v.findViewById(R.id.saveButton);
 
         reseter.setOnClickListener(new View.OnClickListener() {
             @Override

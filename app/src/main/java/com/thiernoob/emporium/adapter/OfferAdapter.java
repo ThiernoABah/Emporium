@@ -42,6 +42,31 @@ public class OfferAdapter extends ArrayAdapter<Offer> {
         int v = offers.get(position).getItem().getPrice();
         price.setText(v+"$");
 
+        setIcons(icon,position);
+
+        setRarityColor(convertView,position);
+
+        return convertView;
+    }
+
+    private void setRarityColor(View convertView, int position){
+        switch (offers.get(position).getItem().getRarity()){
+            case COMMON:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.communColor));
+                break;
+            case RARE:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.rareColor));
+                break;
+            case EPIC:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.epicColor));
+                break;
+            case LEGENDARY:
+                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.legendaryColor));
+                break;
+        }
+    }
+
+    private void setIcons(ImageView icon, int position){
         switch (offers.get(position).getItem().getType()){
             case CONSUMABLE:
                 icon.setImageResource(R.drawable.ic_poison);
@@ -59,24 +84,5 @@ public class OfferAdapter extends ArrayAdapter<Offer> {
                 icon.setImageResource(R.drawable.ic_mortar);
                 break;
         }
-
-        switch (offers.get(position).getItem().getRarity()){
-            case COMMON:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.communColor));
-                break;
-            case RARE:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.rareColor));
-                break;
-            case EPIC:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.epicColor));
-                break;
-            case LEGENDARY:
-                convertView.setBackgroundColor(convertView.getResources().getColor(R.color.legendaryColor));
-                break;
-        }
-
-
-
-        return convertView;
     }
 }

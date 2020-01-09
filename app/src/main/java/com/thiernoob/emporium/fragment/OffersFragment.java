@@ -26,12 +26,13 @@ import com.thiernoob.emporium.gameobjects.Player;
 
 import java.util.List;
 
-public class ClientFragment extends Fragment {
+public class OffersFragment extends Fragment {
 
     private MainActivity activity;
     private Player player;
     private List<Offer> listOffer;
     private OfferAdapter adapter;
+
     private ListView lv;
     private TextView remaining;
 
@@ -44,13 +45,12 @@ public class ClientFragment extends Fragment {
         player = Player.getPlayer();
         listOffer = activity.getOffers();
         adapter = new OfferAdapter(this.getContext(),R.layout.offer_layout,listOffer);
-
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View v =  inflater.inflate(R.layout.fragment_client,container,false);
+        View v =  inflater.inflate(R.layout.fragment_offers,container,false);
         remaining = v.findViewById(R.id.remainingGold);
         remaining.setText(player.getGold()+" $");
         lv = v.findViewById(R.id.offerListView);
@@ -60,7 +60,6 @@ public class ClientFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 alertDialogFire(position);
             }
-
         });
         return v;
     }
@@ -94,10 +93,6 @@ public class ClientFragment extends Fragment {
         dialog.show();
     }
 
-    public void addOffer(Offer offer){
-            listOffer.add(offer);
-            adapter.notifyDataSetChanged();
-    }
 
     public void buy(int position){
         Item i = listOffer.get(position).getItem();

@@ -57,7 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@color/colorPrimaryDark"
-            android:text="Sell"/>
+            android:text="@string/sell"/>
 
     </LinearLayout>
 

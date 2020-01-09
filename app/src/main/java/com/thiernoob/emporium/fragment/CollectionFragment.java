@@ -36,10 +36,8 @@ public class CollectionFragment extends Fragment {
     private MainActivity activity;
     private List<Item> collection;
 
-    // FAIRE UN COLLECTION ADAPTER
     private ItemAdapter adapter;
 
-    // PEUT ETRE FAIRE UNE GRID
     private ListView lv;
     private TextView worth;
 
@@ -53,7 +51,6 @@ public class CollectionFragment extends Fragment {
         player = Player.getPlayer();
         collection = activity.getCollection();
 
-        // FAIRE UN COLLECTION ITEM LAYOUT
         adapter = new ItemAdapter(this.getContext(),R.layout.offer_layout,collection);
     }
 
@@ -148,7 +145,7 @@ public class CollectionFragment extends Fragment {
         String np = sellingPrice.getText().toString();
         int newPrice=Integer.parseInt(np);
         Item i = collection.get(position);
-        // Calcul du temps mini mum a passer dans la boutique difference des prix (prix original et new price ) diviser par la rarete
+        // Calculing the time that the item should passes in the shop based on its rarety and original price
 
         int factor = 1;
         if(newPrice/i.getPrice() > 2){
@@ -186,14 +183,7 @@ public class CollectionFragment extends Fragment {
         worth.setText(cpt+" $");
     }
 
-    public void addItem(Item i ){
-        adapter.add(i);
-        int cpt = 0;
-        for(Item a : collection){
-            cpt += a.getOriginalPrice();
-        }
-        worth.setText(cpt+" $");
-    }
+
 
 
 }

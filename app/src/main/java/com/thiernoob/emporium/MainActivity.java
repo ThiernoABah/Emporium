@@ -1,7 +1,6 @@
 package com.thiernoob.emporium;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
@@ -13,7 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.thiernoob.emporium.adapter.Offer;
-import com.thiernoob.emporium.fragment.ClientFragment;
+import com.thiernoob.emporium.fragment.OffersFragment;
 import com.thiernoob.emporium.fragment.CollectionFragment;
 import com.thiernoob.emporium.fragment.MapFragment;
 import com.thiernoob.emporium.fragment.ProfileFragment;
@@ -45,23 +44,31 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String SAVE_FILENAME = "save.json";
+
+    private int PERCENTAGE_BONUS = 15;
+
+    ////////// For Randoms Offers testing purpose //////////
     private final int NB_RANDOM_ITEMS = 5;
     private final int RANDOM_KARMA = 15;
     private final int RANDOM_MAX_PRICE = 10000;
+    ///////////////////////////////////////////////////////
+
     private int OFFER_CPT;
 
-    private boolean active;
     private Random rand;
 
+    // The object that represent the player (Singleton)
     private Player player;
 
-    private Fragment clientFrag;
+    // Fragments
+    private Fragment offersFrag;
     private Fragment collectionFrag;
     private Fragment mapFrag;
     private Fragment shopFrag;
     private Fragment profileFrag;
 
-
+    // Collections used to represent offers, collection, shop and map
     private List<Offer> listOffer;
     private List<Item> collection;
     private List<Item> shop;
@@ -75,99 +82,22 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-        File f = new File(this.getFilesDir().getAbsolutePath() + "/save.json");
+        File f = new File(this.getFilesDir().getAbsolutePath() + "/"+SAVE_FILENAME);
         if (f.exists()) {
             this.charge(f);
         } else {
-            this.active = true;
-            this.rand = new Random();
-
-            this.player = Player.getPlayer();
-            this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
-
-            this.listOffer = new ArrayList<Offer>();
-            this.collection = new ArrayList<Item>();
-            this.shop = new ArrayList<Item>();
-            this.map = new ArrayList<Kingdom>();
-
-            this.clientFrag = new ClientFragment();
-            this.collectionFrag = new CollectionFragment();
-            this.mapFrag = new MapFragment();
-            this.shopFrag = new ShopFragment();
-            this.profileFrag = new ProfileFragment();
-            /////////////////////////////////////////
-
-            BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-            bottomNav.setSelectedItemId(R.id.nav_profile);
-            bottomNav.setOnNavigationItemSelectedListener(navListener);
-
-            //////////////////////////// Juste pour les inflates, trouver mieux
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, clientFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit();
-            /////////////////////////////////////
-
-            this.randomOffers(this.NB_RANDOM_ITEMS);
+            this.firstConnection();
         }
 
-        this.OFFER_CPT = listOffer.size();
-        this.initMap();
+        this.OFFER_CPT = listOffer.size(); // To set the id of new offers
+        this.initMap(); // Initialising the map (always the same map, map is just use to travel)
 
-        /// Les taches qui font qu'on achete les items du shop ou qu'on recoit de nouvelle offre
-        // Maybe faire des notifications later
-        //ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(2);
-        ScheduledThreadPoolExecutor sch2 = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
-
-        Runnable offerMaker = new Runnable() {
-            @Override
-            public void run() {
-                Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
-                Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
-                listOffer.add(new Offer(OFFER_CPT, 15 - rand.nextInt(30), new Item("test" + OFFER_CPT, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
-                OFFER_CPT++;
-            }
-        };
-
-        Runnable buyItems = new Runnable() {
-            @Override
-            public void run() {
-                if (shop.size() > 0) {
-                    for (Item i : shop) {
-                        i.setTimeInShop(i.getTimeInShop() - 1);
-                    }
-                    for (int i = 0; i < shop.size(); i++) {
-                        if (shop.get(i).getTimeInShop() <= 0) {
-                            shop.get(i).setTimeInShop(0);
-                            buyedFromShop(i);
-                            i--;
-                        }
-                    }
-                }
-            }
-        };
-
-        Runnable autoSave = new Runnable() {
-            @Override
-            public void run() {
-                save();
-            }
-        };
-
-
-        sch2.scheduleAtFixedRate(offerMaker, 2, 20, TimeUnit.SECONDS);
-        sch2.scheduleAtFixedRate(buyItems, 0, 2, TimeUnit.SECONDS);
-        sch2.scheduleAtFixedRate(autoSave, 0, 60, TimeUnit.SECONDS);
+        // Initalise some process to make the game "alive"
+        this.lauchBackgroundProcess();
 
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        this.active = false;
-    }
-
+    // Nav Bar
     private BottomNavigationView.OnNavigationItemSelectedListener navListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
@@ -175,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     Fragment selectedFrag = null;
                     switch (menuItem.getItemId()) {
                         case R.id.nav_client:
-                            selectedFrag = clientFrag;
+                            selectedFrag = offersFrag;
                             break;
                         case R.id.nav_map:
                             selectedFrag = mapFrag;
@@ -189,51 +119,112 @@ public class MainActivity extends AppCompatActivity {
                         case R.id.nav_profile:
                             selectedFrag = profileFrag;
                             break;
+
+                    }
+                    if(selectedFrag == null){
+                        return false;
                     }
                     getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFrag).commit();
-
                     return true;
-
                 }
             };
 
-    // Maybe les links a player later
-    public List<Offer> getOffers() {
-        return this.listOffer;
+    public void initMap() {
+        for (Location l :
+                Location.values()) {
+            if (l == Location.TRAVELING) {
+                continue;
+            }
+            this.map.add(new Kingdom((l)));
+        }
     }
 
-    public List<Item> getCollection() {
-        return this.collection;
+    public void initialise(){
+        /////////// INITIALISATION //////////
+        this.rand = new Random();
+
+        this.player = Player.getPlayer();
+        this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
+
+        this.listOffer = new ArrayList<>();
+        this.collection = new ArrayList<>();
+        this.shop = new ArrayList<>();
+        this.map = new ArrayList<>();
+
+        this.offersFrag = new OffersFragment();
+        this.collectionFrag = new CollectionFragment();
+        this.mapFrag = new MapFragment();
+        this.shopFrag = new ShopFragment();
+        this.profileFrag = new ProfileFragment();
+        /////////////////////////////////////////
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav.setSelectedItemId(R.id.nav_profile);
+        bottomNav.setOnNavigationItemSelectedListener(navListener);
+
+        // Just to inflate the fragment for the first time
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, offersFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
+
     }
 
-    public List<Item> getShop() {
-        return this.shop;
+    private void lauchBackgroundProcess(){
+        // ThreadPoolExecutor charged to run the following thread to simulate a good behaviour
+        ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
+
+        // This runnable is charged to make new offers as time passes
+        Runnable offerMaker = new Runnable() {
+            @Override
+            public void run() {
+                // Randoms item for now
+                Categories cat = Categories.values()[rand.nextInt(Categories.values().length)];
+                Rarity rar = Rarity.values()[rand.nextInt(Rarity.values().length)];
+                listOffer.add(new Offer(OFFER_CPT, 15 - rand.nextInt(30), new Item("test" + OFFER_CPT, rand.nextInt(RANDOM_MAX_PRICE), cat, rar)));
+                OFFER_CPT++;
+            }
+        };
+
+        // This runnable is charged to buy the item that the player put in his shop as time passes
+        Runnable buyItems = new Runnable() {
+            @Override
+            public void run() {
+                if (shop.size() > 0) {
+                    for (Item i : shop) {
+                        i.setTimeInShop(i.getTimeInShop() - 1);
+                    }
+                    for (int i = 0; i < shop.size(); i++) {
+                        if (shop.get(i).getTimeInShop() <= 0) {
+                            shop.get(i).setTimeInShop(0);
+                            buying(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+        };
+
+        // This runnable is charged to save the state of the game
+        Runnable autoSave = new Runnable() {
+            @Override
+            public void run() {
+                save();
+            }
+        };
+
+
+        sch.scheduleAtFixedRate(offerMaker, 2, 25, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(autoSave, 2, 60, TimeUnit.SECONDS);
     }
 
-    public List<Kingdom> getMap() {
-        return map;
-    }
-
-    public boolean isActive() {
-        return this.active;
-    }
-
-    public void addToCollection(Item i) {
-        ((CollectionFragment) this.collectionFrag).addItem(i);
-    }
-
-    public void addToShop(Item i) {
-        ((ShopFragment) this.shopFrag).addItem(i);
-    }
-
-    public void buyedFromShop(int position) {
-        // Buy selon la location du player sa donne plus d'argent
-        player.addGold(shop.get(position).getPrice());
-        shop.remove(position);
-    }
-
-    public void addToOffer(Offer o) {
-        ((ClientFragment) this.clientFrag).addOffer(o);
+    public void firstConnection() {
+        // Init variables, inflate fragment and set nav bar
+        this.initialise();
+        // Generating random Offers for now
+        this.randomOffers(this.NB_RANDOM_ITEMS);
     }
 
     public void randomOffers(int nb) {
@@ -247,73 +238,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void initMap() {
-        for (Location l :
-                Location.values()) {
-            if (l == Location.TRAVELING) {
-                continue;
-            }
-            this.map.add(new Kingdom((l)));
-        }
-    }
+    private void writeJsonToFile(JSONObject save){
+        File file = new File(this.getFilesDir(), SAVE_FILENAME);
 
-    public void reset(){
-        Toast.makeText(getApplicationContext(), "RESET", Toast.LENGTH_LONG).show();
-        // delete file
-    }
-
-    public void save() {
-        Toast.makeText(getApplicationContext(), "SAVING", Toast.LENGTH_LONG).show();
-        JSONObject save = new JSONObject();
-        try {
-            // Here we convert Java Object to JSON
-
-            JSONObject playerSave = new JSONObject();
-            playerSave.put("pseudo", player.getPseudo());
-            playerSave.put("gold", player.getGold());
-            playerSave.put("karma", player.getKarma());
-            playerSave.put("location", player.getLocation().toString());
-            playerSave.put("alignment", player.getAlignment().toString());
-
-            save.put("player", playerSave);
-
-
-            JSONArray collection = new JSONArray();
-
-            for (Item i : this.collection) {
-                JSONObject pnObj = new JSONObject();
-                pnObj.put(String.valueOf(i.getId()), saveItem(i));
-                collection.put(pnObj);
-            }
-
-            save.put("collection", collection);
-
-            JSONArray shop = new JSONArray();
-
-            for (Item i : this.shop) {
-                JSONObject pnObj = new JSONObject();
-                pnObj.put(String.valueOf(i.getId()), saveItem(i));
-                shop.put(pnObj);
-            }
-
-            save.put("shop", shop);
-
-            JSONArray offers = new JSONArray();
-
-            for (Offer i : this.listOffer) {
-                JSONObject pnObj = new JSONObject();
-                pnObj.put(String.valueOf(i.getId()), saveOffer(i));
-                offers.put(pnObj);
-            }
-
-            save.put("offers", offers);
-
-        } catch (JSONException ex) {
-            ex.printStackTrace();
-        }
-
-        String filename = "save.json";
-        File file = new File(this.getFilesDir(), filename);
         FileWriter writer = null;
         BufferedWriter buffWriter = null;
 
@@ -325,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
                 buffWriter.write(save.toString());
                 buffWriter.close();
             } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         } else {
@@ -335,16 +262,142 @@ public class MainActivity extends AppCompatActivity {
                 buffWriter.write(save.toString());
                 buffWriter.close();
             } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "error catch", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
+        }
+    }
+
+    private String readJsonFromFile(File f){
+        StringBuilder text = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+            br.close();
+        } catch (IOException e) {
+            Toast.makeText(getApplicationContext(), "save charge failed", Toast.LENGTH_SHORT).show();
+        }
+        return text.toString();
+    }
+
+    public void reset() {
+        // delete save file
+        String filename = SAVE_FILENAME;
+        File file = new File(this.getFilesDir(), filename);
+        file.delete();
+    }
+
+    public void save() {
+        // Save Game state to a Json Object
+        JSONObject save = new JSONObject();
+        try {
+            JSONObject playerSave = new JSONObject();
+
+            playerSave.put("pseudo", player.getPseudo());
+            playerSave.put("gold", player.getGold());
+            playerSave.put("karma", player.getKarma());
+            playerSave.put("location", player.getLocation().toString());
+            playerSave.put("alignment", player.getAlignment().toString());
+
+            save.put("player", playerSave);
+
+            JSONArray collection = new JSONArray();
+
+            for (Item i : this.collection) {
+                collection.put(saveItem(i));
+            }
+
+            save.put("collection", collection);
+
+            JSONArray shop = new JSONArray();
+
+            for (Item i : this.shop) {
+                shop.put(saveItem(i));
+            }
+
+            save.put("shop", shop);
+
+            JSONArray offers = new JSONArray();
+
+            for (Offer i : this.listOffer) {
+                offers.put(saveOffer(i));
+            }
+
+            save.put("offers", offers);
+
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+        }
+
+        writeJsonToFile(save);
+
+    }
+
+    private void charge(File f) {
+
+        try {
+            // Init variables, inflate fragment and set nav bar
+            this.initialise();
+
+            JSONObject lastSave = new JSONObject(readJsonFromFile(f));
+
+            JSONObject player = lastSave.getJSONObject("player");
+
+            this.player.setPseudo(player.get("pseudo").toString());
+            this.player.setLocation(Location.value(player.get("location").toString()));
+            this.player.setGold(Integer.valueOf(player.get("gold").toString()));
+            this.player.setKarma(Integer.valueOf(player.get("karma").toString()));
+            this.player.setAlignment(Align.value(player.get("alignment").toString()));
+
+
+
+            JSONArray offers = lastSave.getJSONArray("offers");
+
+
+            for (int i = 0; i < offers.length(); i++) {
+                JSONObject offer = offers.getJSONObject(i);
+                Offer o = chargeOffer(offer);
+                if (o != null) {
+                    listOffer.add(o);
+                }
+
+            }
+
+
+            JSONArray shop = lastSave.getJSONArray("shop");
+            for (int i = 0; i < shop.length(); i++) {
+                JSONObject item = shop.getJSONObject(i);
+                Item it = chargeItem(item);
+                if (it != null) {
+                    this.shop.add(it);
+                }
+            }
+
+
+            JSONArray collection = lastSave.getJSONArray("collection");
+            for (int i = 0; i < collection.length(); i++) {
+                JSONObject item = collection.getJSONObject(i);
+                Item it = chargeItem(item);
+                if (it != null) {
+                    this.collection.add(it);
+                }
+            }
+
+
+        } catch (JSONException js) {
+            Toast.makeText(getApplicationContext(), "error while charging", Toast.LENGTH_SHORT).show();
         }
 
     }
 
     private JSONObject saveItem(Item i) {
+        // Transform an item is a JsonObject
         try {
-            // Here we convert Java Object to JSON
+
             JSONObject saveItem = new JSONObject();
             saveItem.put("id", i.getId());
             saveItem.put("name", i.getName());
@@ -354,7 +407,6 @@ public class MainActivity extends AppCompatActivity {
             saveItem.put("rarity", i.getRarity().toString());
             saveItem.put("description", i.getDescription());
             saveItem.put("timeInShop", i.getTimeInShop());
-
             return saveItem;
 
         } catch (JSONException ex) {
@@ -364,14 +416,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private JSONObject saveOffer(Offer o) {
+        // Transform an offer is a JsonObject
         try {
-            // Here we convert Java Object to JSON
-
             JSONObject saveOffer = new JSONObject();
             saveOffer.put("id", o.getId());
             saveOffer.put("karma", o.getKarma());
             saveOffer.put("item", saveItem(o.getItem()));
-
             return saveOffer;
         } catch (JSONException ex) {
             ex.printStackTrace();
@@ -409,101 +459,101 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void charge(File f) {
-        StringBuilder text = new StringBuilder();
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(f));
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                text.append(line);
-            }
-            br.close();
-        } catch (IOException e) {
-            Toast.makeText(getApplicationContext(), "save charge failed", Toast.LENGTH_SHORT).show();
-        }
-        try {
-            this.active = true;
-            this.rand = new Random();
-
-            this.player = Player.getPlayer();
-
-            this.listOffer = new ArrayList<Offer>();
-            this.collection = new ArrayList<Item>();
-            this.shop = new ArrayList<Item>();
-            this.map = new ArrayList<Kingdom>();
-
-            this.clientFrag = new ClientFragment();
-            this.collectionFrag = new CollectionFragment();
-            this.mapFrag = new MapFragment();
-            this.shopFrag = new ShopFragment();
-            this.profileFrag = new ProfileFragment();
-            /////////////////////////////////////////
-
-            BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-            bottomNav.setSelectedItemId(R.id.nav_profile);
-            bottomNav.setOnNavigationItemSelectedListener(navListener);
-
-            //////////////////////////// Juste pour les inflates, trouver mieux
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, clientFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit();
-            ////////////////////////////////
-
-
-            JSONObject lastSave = new JSONObject(text.toString());
-
-            JSONObject player = new JSONObject(lastSave.get("player").toString());
-            if (!player.has("player")) {
-                Toast.makeText(getApplicationContext(), "pseudo is null", Toast.LENGTH_SHORT).show();
-            } else {
-                this.player.setPseudo(player.get("player").toString());
-            }
-            this.player.setLocation(Location.value(player.get("location").toString()));
-            this.player.setGold(Integer.valueOf(player.get("gold").toString()));
-            this.player.setKarma(Integer.valueOf(player.get("karma").toString()));
-            this.player.setAlignment(Align.value(player.get("alignment").toString()));
-            Toast.makeText(getApplicationContext(), "player charged", Toast.LENGTH_SHORT).show();
-
-
-            JSONArray offers = new JSONArray(lastSave.get("offers").toString());
-            Log.d("OFFERS", lastSave.get("offers").toString());
-            Toast.makeText(getApplicationContext(), "offers size : " + offers.length(), Toast.LENGTH_SHORT).show();
-            for (int i = 0; i < offers.length(); i++) {
-                JSONObject offer = offers.getJSONObject(i);
-                Offer o = chargeOffer(offer);
-                if (o != null) {
-                    listOffer.add(o);
-                }
-
-            }
-            Toast.makeText(getApplicationContext(), "offers charged", Toast.LENGTH_SHORT).show();
-
-            JSONArray shop = new JSONArray(lastSave.get("shop").toString());
-            for (int i = 0; i < shop.length(); i++) {
-                JSONObject item = shop.getJSONObject(i);
-                Item it = chargeItem(item);
-                if (it != null) {
-                    this.shop.add(it);
-                }
-            }
-            Toast.makeText(getApplicationContext(), "items charged", Toast.LENGTH_SHORT).show();
-
-            JSONArray collection = new JSONArray(lastSave.get("collection").toString());
-            for (int i = 0; i < collection.length(); i++) {
-                JSONObject item = collection.getJSONObject(i);
-                Item it = chargeItem(item);
-                if (it != null) {
-                    this.collection.add(it);
-                }
-            }
-            Toast.makeText(getApplicationContext(), "collection charged", Toast.LENGTH_SHORT).show();
-
-        } catch (JSONException js) {
-            Toast.makeText(getApplicationContext(), "error while charging", Toast.LENGTH_SHORT).show();
-        }
-
+    public List<Offer> getOffers() {
+        return this.listOffer;
     }
+
+    public List<Item> getCollection() {
+        return this.collection;
+    }
+
+    public List<Item> getShop() {
+        return this.shop;
+    }
+
+    public List<Kingdom> getMap() {
+        return map;
+    }
+
+    public void addToCollection(Item i) {
+        this.collection.add(i);
+    }
+
+    public void addToShop(Item i) {
+        this.shop.add(i);
+    }
+
+    public void buying(int position) {
+        switch (this.player.getLocation()){
+            case AZIR:
+                if(shop.get(position).getType() == Categories.CONSUMABLE){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case AIMIA:
+                if(shop.get(position).getType() == Categories.INGREDIENT){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case ALETHKAR:
+                if(shop.get(position).getType() == Categories.WEAPON || shop.get(position).getType() == Categories.SHIELD ){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case JAH_KEVED:
+                if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.INGREDIENT || shop.get(position).getType() == Categories.CONSUMABLE){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case NARAK:
+                if(shop.get(position).getType() == Categories.SHIELD || shop.get(position).getType() == Categories.INGREDIENT){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case RESHI:
+                if(shop.get(position).getType() == Categories.SPELL || shop.get(position).getType() == Categories.WEAPON ){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case SHINOVAR:
+                if(shop.get(position).getType() == Categories.CONSUMABLE || shop.get(position).getType() == Categories.INGREDIENT ){
+                    int money = shop.get(position).getPrice() + (shop.get(position).getPrice() / PERCENTAGE_BONUS) *100;
+                    this.player.addGold(money);
+                }
+                else{
+                    this.player.addGold(shop.get(position).getPrice());
+                }
+                break;
+            case TRAVELING:
+                this.player.addGold(shop.get(position).getPrice());
+                break;
+
+        }
+        this.shop.remove(position);
+    }
+
 }

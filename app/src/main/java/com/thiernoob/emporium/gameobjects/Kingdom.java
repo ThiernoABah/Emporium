@@ -4,7 +4,6 @@ import com.thiernoob.emporium.gameobjects.enums.Location;
 
 public class Kingdom {
     private Location kingdom;
-    // ajouter les bonus later
 
     public Kingdom(Location kingdom){
         this.kingdom = kingdom;

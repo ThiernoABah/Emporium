@@ -15,7 +15,7 @@ public class Item {
     private int timeInShop;
 
 
-    public Item(String name, int price, Categories type, Rarity rarity){
+    public Item(String name, int price, Categories type, Rarity rarity) {
         this.name = name;
         this.price = price;
         this.original_price = price;
@@ -25,32 +25,30 @@ public class Item {
         this.timeInShop = 0;
     }
 
-    public Item(String name, int price, Categories type, Rarity rarity, String description){
+    public Item(String name, int price, Categories type, Rarity rarity, String description) {
         this.name = name;
         this.price = price;
         this.original_price = price;
         this.type = type;
         this.rarity = rarity;
-        if(description == null){
+        if (description == null) {
             this.description = "Nothing much to say...";
-        }
-        else{
+        } else {
             this.description = description;
         }
         this.timeInShop = 0;
     }
 
-    public Item(int id, String name, int price, Categories type, Rarity rarity, String description, int orginalPrice, int timeInShop){
+    public Item(int id, String name, int price, Categories type, Rarity rarity, String description, int orginalPrice, int timeInShop) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.original_price = orginalPrice;
         this.type = type;
         this.rarity = rarity;
-        if(description == null){
+        if (description == null) {
             this.description = "Nothing much to say...";
-        }
-        else{
+        } else {
             this.description = description;
         }
         this.timeInShop = timeInShop;
@@ -65,11 +63,11 @@ public class Item {
         this.timeInShop = timeInShop;
     }
 
-    public void setId(int id){
+    public void setId(int id) {
         this.id = id;
     }
 
-    public int getId(){
+    public int getId() {
         return id;
     }
 
