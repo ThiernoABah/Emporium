@@ -89,8 +89,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         player.destroy();
-        if(this.sch != null)
-            this.sch.shutdown();
+        if (this.sch != null) {
+            Log.d("on destroy", "destroy sch");
+            this.sch.shutdownNow();
+        }
+
     }
 
     @Override
@@ -153,9 +156,9 @@ public class MainActivity extends AppCompatActivity {
         // delete save file and reset game
         String filename = SAVE_FILENAME;
         File file = new File(this.getFilesDir(), filename);
-        Log.d("File deleted", String.valueOf(file.delete()));
+
         player.destroy();
-        this.sch.shutdown();
+        this.sch.shutdownNow();
 
         Intent returnIntent = new Intent();
         setResult(Activity.RESULT_CANCELED, returnIntent);
@@ -163,9 +166,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void save() {
-        if(player.getLocation() == Location.TRAVELING){
+        if (player.getLocation() == Location.TRAVELING) {
             player.setLocation(player.getLastLocation());
         }
+
+
         // Save Game state to a Json Object
         JSONObject save = new JSONObject();
         try {
@@ -310,7 +315,6 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
 
-        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
 
     }
 
@@ -324,6 +328,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void lauchBackgroundProcess() {
+
+        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
 
         // This runnable is charged to make new offers as time passes and remove old offers if the player didnt took his chance
         Runnable offerMaker = new Runnable() {
@@ -374,8 +380,29 @@ public class MainActivity extends AppCompatActivity {
 
 
         sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(buyItems, 2, 3, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
+
+        /*Thread t = new Thread() {
+            @Override
+            public void run() {
+                while (!isInterrupted()) {
+                    try {
+                        Thread.sleep(1000);  //1000ms = 1 sec
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                majRemainingGold();
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        t.start();*/
     }
 
     private void writeJsonToFile(JSONObject save) {
@@ -492,7 +519,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     public List<Offer> getOffers() {
         return this.listOffer;
     }
@@ -520,7 +546,6 @@ public class MainActivity extends AppCompatActivity {
     public void buying(int position) {
 
         if (!shopFrag.isVisible()) {
-
             if (Kingdom.bonusOn(this.player.getLocation(), shop.get(position).getType())) {
                 int money = shop.get(position).getPrice() + Math.round((shop.get(position).getPrice() * PERCENTAGE_BONUS) / 100);
                 this.player.addGold(money);
@@ -528,8 +553,15 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 this.player.addGold(shop.get(position).getPrice());
             }
-            this.mainRemainingGold.setText(this.player.getGold() + " $");
+
             this.shop.remove(position);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    majRemainingGold();
+                }
+            });
         }
 
     }
