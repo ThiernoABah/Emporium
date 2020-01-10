@@ -82,27 +82,11 @@ public class CollectionFragment extends Fragment {
         final Dialog sellingDial = new Dialog(this.getContext());
         sellingDial.setContentView(R.layout.vending_layout);
         ((TextView)sellingDial.findViewById(R.id.item_name)).setText(collection.get(position).getName());
+        ImageView icon = sellingDial.findViewById(R.id.item_icon);
+        setIcons(icon,position);
 
-        switch (collection.get(position).getType()){
-            case CONSUMABLE:
-                ((ImageView)sellingDial.findViewById(R.id.item_icon)).setImageResource(R.drawable.ic_poison);
-                break;
-            case WEAPON:
-                ((ImageView)sellingDial.findViewById(R.id.item_icon)).setImageResource(R.drawable.ic_sword);
-                break;
-            case SPELL:
-                ((ImageView)sellingDial.findViewById(R.id.item_icon)).setImageResource(R.drawable.ic_magic_wand);
-                break;
-            case SHIELD:
-                ((ImageView)sellingDial.findViewById(R.id.item_icon)).setImageResource(R.drawable.ic_shield);
-                break;
-            case INGREDIENT:
-                ((ImageView)sellingDial.findViewById(R.id.item_icon)).setImageResource(R.drawable.ic_mortar);
-                break;
-        }
 
         ((TextView)sellingDial.findViewById(R.id.item_description)).setText(collection.get(position).getDescription()+"\n Item Buyed at : "+collection.get(position).getOriginalPrice());
-
 
         sellingPrice = (sellingDial.findViewById(R.id.selling_price));
         sellingButton = (sellingDial.findViewById(R.id.selling_button));
@@ -189,6 +173,26 @@ public class CollectionFragment extends Fragment {
             cpt += a.getOriginalPrice();
         }
         worth.setText(cpt+" $");
+    }
+
+    private void setIcons(ImageView icon, int position){
+        switch (collection.get(position).getType()){
+            case CONSUMABLE:
+                icon.setImageResource(R.drawable.ic_poison);
+                break;
+            case WEAPON:
+                icon.setImageResource(R.drawable.ic_sword);
+                break;
+            case SPELL:
+                icon.setImageResource(R.drawable.ic_magic_wand);
+                break;
+            case SHIELD:
+                icon.setImageResource(R.drawable.ic_shield);
+                break;
+            case INGREDIENT:
+                icon.setImageResource(R.drawable.ic_mortar);
+                break;
+        }
     }
 
 

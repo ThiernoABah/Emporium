@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     // Remaining gold view
     TextView mainRemainingGold;
 
+    // ThreadPoolExecutor charged to run the following thread to simulate a good behaviour
     ScheduledThreadPoolExecutor sch;
 
 
@@ -147,195 +148,6 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 }
             };
-
-    public void firstConnection() {
-        // Init variables, inflate fragment and set nav bar
-        this.initialise();
-
-        // Generating random Offers for now
-        this.firstOffers(FIRST_OFFERS);
-    }
-
-    public void initialise() {
-        /////////// INITIALISATION //////////
-        this.rand = new Random();
-
-        this.player = Player.getPlayer();
-        this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
-
-        this.items = InitialiseItems.InitialiseItems().getAllItems();
-
-        this.listOffer = new ArrayList<>();
-        this.collection = new ArrayList<>();
-        this.shop = new ArrayList<>();
-        this.map = new ArrayList<>();
-
-        this.offersFrag = new OffersFragment();
-        this.collectionFrag = new CollectionFragment();
-        this.mapFrag = new MapFragment();
-        this.shopFrag = new ShopFragment();
-        this.profileFrag = new ProfileFragment();
-
-        this.mainRemainingGold = findViewById(R.id.mainRemainingGold);
-
-        /////////////////////////////////////////
-
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
-        bottomNav.setSelectedItemId(R.id.nav_profile);
-        bottomNav.setOnNavigationItemSelectedListener(navListener);
-
-        // Just to inflate the fragment for the first time
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, offersFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
-
-        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
-
-    }
-
-    public void initMap() {
-        for (Location l : Location.values()) {
-            if (l == Location.TRAVELING) {
-                continue;
-            }
-            this.map.add(new Kingdom((l)));
-        }
-    }
-
-
-    private void lauchBackgroundProcess() {
-        // ThreadPoolExecutor charged to run the following thread to simulate a good behaviour
-        //ScheduledThreadPoolExecutor sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
-
-        // This runnable is charged to make new offers as time passes and remove old offers if the player didnt took his chance
-        Runnable offerMaker = new Runnable() {
-            @Override
-            public void run() {
-                // Randoms item for now
-                OFFER_CPT++;
-
-                if (!offersFrag.isVisible()) {
-                    if (listOffer.size() <= MAX_OFFERS) {
-                        Item item = items.get(rand.nextInt(items.size()));
-                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
-                    } else {
-                        listOffer.remove(0);
-                    }
-
-                }
-
-            }
-        };
-
-        // This runnable is charged to buy the item that the player put in his shop as time passes
-        Runnable buyItems = new Runnable() {
-            @Override
-            public void run() {
-                if (shop.size() > 0) {
-                    for (Item i : shop) {
-                        i.setTimeInShop(i.getTimeInShop() - 1);
-                    }
-                    for (int i = 0; i < shop.size(); i++) {
-                        if (shop.get(i).getTimeInShop() <= 0) {
-                            shop.get(i).setTimeInShop(0);
-                            buying(i);
-                            i--;
-                        }
-                    }
-                }
-            }
-        };
-
-        // This runnable is charged to save the state of the game
-        Runnable autoSave = new Runnable() {
-            @Override
-            public void run() {
-                save();
-            }
-        };
-
-
-        sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(buyItems, 2, 3, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
-    }
-
-    public int computeKarma(Item i) {
-
-        switch (i.getType()) {
-            case CONSUMABLE:
-                return 8;
-            case SPELL:
-                return rand.nextInt(20) - 10;
-            case SHIELD:
-                return -3;
-            case INGREDIENT:
-                return 1;
-            case WEAPON:
-                return -8;
-        }
-        return 0;
-    }
-
-
-    public void firstOffers(int nb) {
-        Random rand = new Random();
-        for (int i = 0; i < nb; i++) {
-            Item item = this.items.get(rand.nextInt(this.items.size()));
-            this.listOffer.add(new Offer(i, this.computeKarma(item), item));
-        }
-    }
-
-
-    private void writeJsonToFile(JSONObject save) {
-        File file = new File(this.getFilesDir(), SAVE_FILENAME);
-
-        FileWriter writer = null;
-        BufferedWriter buffWriter = null;
-
-        if (!(file.exists())) {
-            try {
-                file.createNewFile();
-                writer = new FileWriter(file.getAbsoluteFile());
-                buffWriter = new BufferedWriter(writer);
-                buffWriter.write(save.toString());
-                buffWriter.close();
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                file.delete();
-                file.createNewFile();
-                writer = new FileWriter(file.getAbsoluteFile());
-                buffWriter = new BufferedWriter(writer);
-                buffWriter.write(save.toString());
-                buffWriter.close();
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private String readJsonFromFile(File f) {
-        StringBuilder text = new StringBuilder();
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(f));
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                text.append(line);
-            }
-            br.close();
-        } catch (IOException e) {
-            Toast.makeText(getApplicationContext(), "save charge failed", Toast.LENGTH_SHORT).show();
-        }
-        return text.toString();
-    }
 
     public void reset() {
         // delete save file and reset game
@@ -455,6 +267,165 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void firstConnection() {
+        // Init variables, inflate fragment and set nav bar
+        this.initialise();
+
+        // Generating random Offers for now
+        this.firstOffers(FIRST_OFFERS);
+    }
+
+    public void initialise() {
+        /////////// INITIALISATION //////////
+        this.rand = new Random();
+
+        this.player = Player.getPlayer();
+        this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
+
+        this.items = InitialiseItems.InitialiseItems().getAllItems();
+
+        this.listOffer = new ArrayList<>();
+        this.collection = new ArrayList<>();
+        this.shop = new ArrayList<>();
+        this.map = new ArrayList<>();
+
+        this.offersFrag = new OffersFragment();
+        this.collectionFrag = new CollectionFragment();
+        this.mapFrag = new MapFragment();
+        this.shopFrag = new ShopFragment();
+        this.profileFrag = new ProfileFragment();
+
+        this.mainRemainingGold = findViewById(R.id.mainRemainingGold);
+
+        /////////////////////////////////////////
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
+        bottomNav.setSelectedItemId(R.id.nav_profile);
+        bottomNav.setOnNavigationItemSelectedListener(navListener);
+
+        // Just to inflate the fragment for the first time
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, offersFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
+
+        sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
+
+    }
+
+    public void initMap() {
+        for (Location l : Location.values()) {
+            if (l == Location.TRAVELING) {
+                continue;
+            }
+            this.map.add(new Kingdom((l)));
+        }
+    }
+
+    private void lauchBackgroundProcess() {
+
+        // This runnable is charged to make new offers as time passes and remove old offers if the player didnt took his chance
+        Runnable offerMaker = new Runnable() {
+            @Override
+            public void run() {
+                // Randoms item for now
+                OFFER_CPT++;
+
+                if (!offersFrag.isVisible()) {
+                    if (listOffer.size() <= MAX_OFFERS) {
+                        Item item = items.get(rand.nextInt(items.size()));
+                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
+                    } else {
+                        listOffer.remove(0);
+                    }
+
+                }
+
+            }
+        };
+
+        // This runnable is charged to buy the item that the player put in his shop as time passes
+        Runnable buyItems = new Runnable() {
+            @Override
+            public void run() {
+                if (shop.size() > 0) {
+                    for (Item i : shop) {
+                        i.setTimeInShop(i.getTimeInShop() - 1);
+                    }
+                    for (int i = 0; i < shop.size(); i++) {
+                        if (shop.get(i).getTimeInShop() <= 0) {
+                            shop.get(i).setTimeInShop(0);
+                            buying(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+        };
+
+        // This runnable is charged to save the state of the game
+        Runnable autoSave = new Runnable() {
+            @Override
+            public void run() {
+                save();
+            }
+        };
+
+
+        sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(buyItems, 2, 3, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
+    }
+
+    private void writeJsonToFile(JSONObject save) {
+        File file = new File(this.getFilesDir(), SAVE_FILENAME);
+
+        FileWriter writer = null;
+        BufferedWriter buffWriter = null;
+
+        if (!(file.exists())) {
+            try {
+                file.createNewFile();
+                writer = new FileWriter(file.getAbsoluteFile());
+                buffWriter = new BufferedWriter(writer);
+                buffWriter.write(save.toString());
+                buffWriter.close();
+            } catch (IOException e) {
+                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                file.delete();
+                file.createNewFile();
+                writer = new FileWriter(file.getAbsoluteFile());
+                buffWriter = new BufferedWriter(writer);
+                buffWriter.write(save.toString());
+                buffWriter.close();
+            } catch (IOException e) {
+                Toast.makeText(getApplicationContext(), "error catch while saving", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String readJsonFromFile(File f) {
+        StringBuilder text = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+            br.close();
+        } catch (IOException e) {
+            Toast.makeText(getApplicationContext(), "save charge failed", Toast.LENGTH_SHORT).show();
+        }
+        return text.toString();
+    }
+
     private JSONObject saveItem(Item i) {
         // Transform an item is a JsonObject
         try {
@@ -520,6 +491,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+
     public List<Offer> getOffers() {
         return this.listOffer;
     }
@@ -534,10 +507,6 @@ public class MainActivity extends AppCompatActivity {
 
     public List<Kingdom> getMap() {
         return map;
-    }
-
-    public void majRemainingGold() {
-        this.mainRemainingGold.setText(this.player.getGold() + " $");
     }
 
     public void addToCollection(Item i) {
@@ -563,6 +532,35 @@ public class MainActivity extends AppCompatActivity {
             this.shop.remove(position);
         }
 
+    }
+
+    public void majRemainingGold() {
+        this.mainRemainingGold.setText(this.player.getGold() + " $");
+    }
+
+    public void firstOffers(int nb) {
+        Random rand = new Random();
+        for (int i = 0; i < nb; i++) {
+            Item item = this.items.get(rand.nextInt(this.items.size()));
+            this.listOffer.add(new Offer(i, this.computeKarma(item), item));
+        }
+    }
+
+    public int computeKarma(Item i) {
+
+        switch (i.getType()) {
+            case CONSUMABLE:
+                return 8;
+            case SPELL:
+                return rand.nextInt(20) - 10;
+            case SHIELD:
+                return -3;
+            case INGREDIENT:
+                return 1;
+            case WEAPON:
+                return -8;
+        }
+        return 0;
     }
 
 
