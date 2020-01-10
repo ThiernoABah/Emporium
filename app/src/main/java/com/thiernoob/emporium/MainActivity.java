@@ -157,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         String filename = SAVE_FILENAME;
         File file = new File(this.getFilesDir(), filename);
 
+        file.delete();
         player.destroy();
         this.sch.shutdownNow();
 
@@ -340,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (!offersFrag.isVisible()) {
                     if (listOffer.size() <= MAX_OFFERS) {
-                        Item item = items.get(rand.nextInt(items.size()));
+                        Item item = items.get(rand.nextInt(items.size())).clone();
                         listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
                     } else {
                         listOffer.remove(0);
@@ -573,7 +574,7 @@ public class MainActivity extends AppCompatActivity {
     public void firstOffers(int nb) {
         Random rand = new Random();
         for (int i = 0; i < nb; i++) {
-            Item item = this.items.get(rand.nextInt(this.items.size()));
+            Item item = this.items.get(rand.nextInt(this.items.size())).clone();
             this.listOffer.add(new Offer(i, this.computeKarma(item), item));
         }
     }

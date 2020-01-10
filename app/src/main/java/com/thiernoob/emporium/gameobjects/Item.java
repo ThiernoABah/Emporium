@@ -55,6 +55,10 @@ public class Item {
 
     }
 
+    public Item clone(){
+        return new Item(this.id,this.name,this.price,this.type,this.rarity,this.description,this.original_price,this.timeInShop);
+    }
+
     public int getTimeInShop() {
         return timeInShop;
     }

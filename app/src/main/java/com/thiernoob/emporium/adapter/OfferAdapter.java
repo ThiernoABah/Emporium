@@ -42,7 +42,7 @@ public class OfferAdapter extends ArrayAdapter<Offer> {
 
         // When the item is on the offer adapter it reset it price
         offers.get(position).getItem().setPrice(offers.get(position).getItem().getOriginalPrice());
-        int v = offers.get(position).getItem().getPrice();
+        int v = offers.get(position).getItem().getOriginalPrice();
         price.setText(v+"$");
 
         setIcons(icon,position);
