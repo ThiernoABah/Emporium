@@ -4,15 +4,23 @@ import com.thiernoob.emporium.gameobjects.enums.Categories;
 import com.thiernoob.emporium.gameobjects.enums.Rarity;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Random;
 
 public class InitialiseItems {
 
     private static InitialiseItems initItems = null;
 
     private static ArrayList<Item> allItems;
+    private static ArrayList<Integer> proba;
+    private Random rand;
+
 
     private InitialiseItems() {
         this.allItems = new ArrayList<>();
+        this.proba = new ArrayList<>();
+        this.rand = new Random();
     }
 
     public static InitialiseItems InitialiseItems() {
@@ -77,11 +85,36 @@ public class InitialiseItems {
         allItems.add(new Item("Air Carapace", 20000, Categories.SHIELD, Rarity.COMMON, "Taking refuge under this Trophy will protect you from wind, but will not prevent you from generating your own. This can lead to an uncomfortable case of trapped wind."));
         allItems.add(new Item("Neutral Carapace", 20000, Categories.SHIELD, Rarity.COMMON, "This Trophy protects you from all the ditherers who can't choose sides during a fight."));
 
+        genProba();
 
         return initItems;
     }
 
+    private static void genProba(){
+        for (int i=0; i< allItems.size();i++){
+            switch (allItems.get(i).getRarity()){
+                case COMMON:
+                    proba.addAll(new ArrayList<>(Collections.nCopies(4,i) ));
+                    break;
+                case RARE:
+                    proba.addAll(new ArrayList<>(Collections.nCopies(3,i) ));
+                    break;
+                case EPIC:
+                    proba.addAll(new ArrayList<>(Collections.nCopies(2,i) ));
+                    break;
+                case LEGENDARY:
+                    proba.add(i);
+                    break;
+            }
+        }
+
+    }
     public ArrayList<Item> getAllItems(){
         return allItems;
+    }
+
+    // return random items following their rarity
+    public Item getItems(){
+        return allItems.get(proba.get(rand.nextInt(proba.size()))).clone();
     }
 }

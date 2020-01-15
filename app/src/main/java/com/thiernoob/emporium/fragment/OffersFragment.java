@@ -112,4 +112,7 @@ public class OffersFragment extends Fragment {
         }
     }
 
+    public OfferAdapter getAdapter() {
+        return adapter;
+    }
 }

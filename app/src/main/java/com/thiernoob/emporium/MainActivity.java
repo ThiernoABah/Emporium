@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private Player player;
 
     // All possible Items
-    private ArrayList<Item> items;
+    private InitialiseItems items;
 
     // Fragments
     private Fragment offersFrag;
@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
         this.player = Player.getPlayer();
         this.player.setPseudo(getIntent().getStringExtra("PSEUDO"));
 
-        this.items = InitialiseItems.InitialiseItems().getAllItems();
+        this.items = InitialiseItems.InitialiseItems();
 
         this.listOffer = new ArrayList<>();
         this.collection = new ArrayList<>();
@@ -341,12 +341,24 @@ public class MainActivity extends AppCompatActivity {
 
                 if (!offersFrag.isVisible()) {
                     if (listOffer.size() <= MAX_OFFERS) {
-                        Item item = items.get(rand.nextInt(items.size())).clone();
+                        Item item = items.getItems();
                         listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
                     } else {
                         listOffer.remove(0);
                     }
 
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (listOffer.size() <= MAX_OFFERS) {
+                                Item item = items.getItems();
+                                ((OffersFragment)offersFrag).getAdapter().add(new Offer(OFFER_CPT, computeKarma(item), item));
+                            } else {
+                                ((OffersFragment)offersFrag).getAdapter().remove(((OffersFragment)offersFrag).getAdapter().getItem(0));
+                            }
+                        }
+                    });
                 }
 
             }
@@ -384,26 +396,6 @@ public class MainActivity extends AppCompatActivity {
         sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
 
-        /*Thread t = new Thread() {
-            @Override
-            public void run() {
-                while (!isInterrupted()) {
-                    try {
-                        Thread.sleep(1000);  //1000ms = 1 sec
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                majRemainingGold();
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-
-        t.start();*/
     }
 
     private void writeJsonToFile(JSONObject save) {
@@ -547,7 +539,7 @@ public class MainActivity extends AppCompatActivity {
     public void buying(int position) {
 
         if (!shopFrag.isVisible()) {
-            if (Kingdom.bonusOn(this.player.getLocation(), shop.get(position).getType())) {
+            if (Kingdom.bonusOn(player.getLocation(), shop.get(position).getType())) {
                 int money = shop.get(position).getPrice() + Math.round((shop.get(position).getPrice() * PERCENTAGE_BONUS) / 100);
                 this.player.addGold(money);
 
@@ -574,7 +566,8 @@ public class MainActivity extends AppCompatActivity {
     public void firstOffers(int nb) {
         Random rand = new Random();
         for (int i = 0; i < nb; i++) {
-            Item item = this.items.get(rand.nextInt(this.items.size())).clone();
+            //Item item = this.items.get(rand.nextInt(this.items.size())).clone();
+            Item item = items.getItems();
             this.listOffer.add(new Offer(i, this.computeKarma(item), item));
         }
     }
