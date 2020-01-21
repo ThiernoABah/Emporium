@@ -98,9 +98,10 @@ public class OffersFragment extends Fragment {
         int karma = listOffer.get(position).getKarma();
         if (player.getGold() >= i.getPrice()) {
             player.giveGold(i.getPrice());
-
             player.updateKarma(karma);
             adapter.remove(listOffer.get(position));
+
+
             activity.addToCollection(i);
             activity.majRemainingGold();
         } else {

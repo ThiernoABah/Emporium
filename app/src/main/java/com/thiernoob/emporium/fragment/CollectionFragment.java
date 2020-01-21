@@ -138,7 +138,7 @@ public class CollectionFragment extends Fragment {
 
         int factor = 1;
         if(newPrice/i.getPrice() > 4){
-            factor = 10;
+            factor = 20;
         }
         else if(newPrice/i.getPrice() > 2){
             factor = 4;
@@ -195,7 +195,7 @@ public class CollectionFragment extends Fragment {
         }
     }
 
-
-
-
+    public ItemAdapter getAdapter() {
+        return adapter;
+    }
 }

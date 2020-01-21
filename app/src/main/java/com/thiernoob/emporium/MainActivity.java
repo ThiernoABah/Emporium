@@ -1,9 +1,13 @@
 package com.thiernoob.emporium;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.IpSecManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
@@ -11,8 +15,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.thiernoob.emporium.adapter.Offer;
@@ -40,6 +46,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -54,9 +61,13 @@ public class MainActivity extends AppCompatActivity {
     private int MAX_OFFERS = 15;
     private int FIRST_OFFERS = 5;
     private int SAVE_RATE = 25; // every 25 seconds there a save
+    private int OFFER_RATE = 10; // new Offer every 10 seconds
+    private int SHOP_TIC = 25; // tick to count the time a item have to stay in the shop (using his time in shop attribute)
 
+    // Counter for the number of offers (using it to give an id to a offer)
     private int OFFER_CPT;
 
+    // Variable used to get random value
     private Random rand;
 
     // The object that represent the player (Singleton)
@@ -71,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
     private Fragment mapFrag;
     private Fragment shopFrag;
     private Fragment profileFrag;
+    private Fragment selectedFrag;
+
+
+    // Tutorials Boolean (true if you have to display tutorial)
+    private boolean tutoCollection;
+    private boolean tutoShop;
+    private boolean tutoOffer;
+    private boolean tutoMap;
 
     // Collections used to represent offers, collection, shop and map
     private List<Offer> listOffer;
@@ -106,6 +125,11 @@ public class MainActivity extends AppCompatActivity {
         File f = new File(this.getFilesDir().getAbsolutePath() + "/" + SAVE_FILENAME);
         if (!f.exists()) {
             this.firstConnection();
+            this.tutoCollection = true;
+            this.tutoShop = true;
+            this.tutoMap = true;
+            this.tutoOffer = true;
+
         } else {
             this.charge(f);
         }
@@ -113,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         this.OFFER_CPT = listOffer.size(); // To set the id of new offers
         this.initMap(); // Initialising the map (always the same map, map is just use to travel)
 
+        // To display the remaining gold of the player on screen
         this.majRemainingGold();
 
         // Initalise some process to make the game "alive"
@@ -120,38 +145,81 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    // Nav Bar
+    // Navigation Bar
     private BottomNavigationView.OnNavigationItemSelectedListener navListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                    Fragment selectedFrag = null;
+                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    Fragment nextFrag = null;
                     switch (menuItem.getItemId()) {
-                        case R.id.nav_client:
-                            selectedFrag = offersFrag;
+                        case R.id.nav_offer:
+                            nextFrag = offersFrag;
                             break;
                         case R.id.nav_map:
-                            selectedFrag = mapFrag;
+                            nextFrag = mapFrag;
                             break;
                         case R.id.nav_shop:
-                            selectedFrag = shopFrag;
+                            nextFrag = shopFrag;
                             break;
                         case R.id.nav_collection:
-                            selectedFrag = collectionFrag;
+                            nextFrag = collectionFrag;
                             break;
                         case R.id.nav_profile:
-                            selectedFrag = profileFrag;
+                            nextFrag = profileFrag;
                             break;
 
                     }
-                    if (selectedFrag == null) {
+                    if (nextFrag == null) {
                         return false;
                     }
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, selectedFrag).commit();
+                    ft.hide(selectedFrag).show(nextFrag).commit();
+                    selectedFrag = nextFrag;
+                    tutorial(menuItem.getItemId()); // if its the first time on a frag display a tutoriel to explain it
                     return true;
                 }
             };
 
+    // tutorial depending on the fragment the player is
+    public void tutorial(int id) {
+        if (id == R.id.nav_collection && tutoCollection) {
+            tutorialDialog("Collection Tutorial", "This is your collection, all the items you buy comes here, this is your treasure and if you want to sell an item you can do it from here just click on it.\n\n" +
+                    "Tips : Don't be too greedy when selling a item if you sell it at twice or more his original price he can take a while to be sold");
+            tutoCollection = false;
+        } else if (id == R.id.nav_map && tutoMap) {
+            tutorialDialog("Map Tutorial", "This is the map, here you can travel from kingdom to kingdom, traveling can take a while." +
+                    "\n\nTips : Some kingdom like some kinds of items you will get a bonus if you sell the rights items while you are in the right kingdom.");
+            tutoMap = false;
+        } else if (id == R.id.nav_shop && tutoShop) {
+            tutorialDialog("Shop Tutorial", "This is your shop all the items that you are selling appears here you can take them back to your collection if they are not sell." +
+                    "\nYour items will be selled over time just wait.");
+            tutoShop = false;
+        } else if (id == R.id.nav_offer && tutoOffer) {
+            tutorialDialog("Offers Tutorial", "This is your offers here you receive offers from traveller some times if you are a lucky rare items may be proposed to you this is where you buy the items." +
+                    "\n\nTips : The type of a item is defined by the icon next to his name and each item have a rarity : Common items are green, Rare items are blue, Epic Items are purple and Legendary items orange.");
+            tutoOffer = false;
+        }
+    }
+
+    // the method that fire the turorial dialog
+    public void tutorialDialog(String titre, String msg) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.dialogMessage);
+        TextView title = new TextView(this);
+        title.setText(titre);
+        title.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        title.setGravity(Gravity.CENTER);
+        title.setTextSize(25);
+        builder.setCustomTitle(title);
+        builder.setMessage(msg);
+        builder.setPositiveButton("Got it", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    // reset player save and let him start a new game from 0
     public void reset() {
         // delete save file and reset game
         String filename = SAVE_FILENAME;
@@ -166,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    // save the player progress
     public void save() {
         if (player.getLocation() == Location.TRAVELING) {
             player.setLocation(player.getLastLocation());
@@ -217,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // on connection if the player have a save file this method load it
     private void charge(File f) {
 
         try {
@@ -273,14 +343,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // Initialise the game if this is a first connection (no save file found)
     public void firstConnection() {
         // Init variables, inflate fragment and set nav bar
         this.initialise();
 
         // Generating random Offers for now
         this.firstOffers(FIRST_OFFERS);
+
+        // This handler is here to delay the appearence of the first tutorial dialog (making some time for the keybord to disappear and have a nice dispaly)
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                tutorialDialog("Profile tutorial", "Hello " + player.getPseudo() + " Welcome !\nThis is your profile section here you can save your progression and reset it if you want to start again." +
+                        "\nYou can also check some information about your progression i let you discover it.");
+            }
+        }, 250);
+
     }
 
+    // Initialise the game parameters
     public void initialise() {
         /////////// INITIALISATION //////////
         this.rand = new Random();
@@ -301,6 +384,7 @@ public class MainActivity extends AppCompatActivity {
         this.shopFrag = new ShopFragment();
         this.profileFrag = new ProfileFragment();
 
+
         this.mainRemainingGold = findViewById(R.id.mainRemainingGold);
 
         /////////////////////////////////////////
@@ -309,25 +393,39 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setSelectedItemId(R.id.nav_profile);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
 
-        // Just to inflate the fragment for the first time
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, collectionFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, shopFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, offersFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mapFrag).commit();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, profileFrag).commit(); // This last one is to put the profile frag as the first fragment that the player will see
 
-
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.fragment_container, collectionFrag);
+        ft.hide(collectionFrag);
+        ft.add(R.id.fragment_container, shopFrag);
+        ft.hide(shopFrag);
+        ft.add(R.id.fragment_container, offersFrag);
+        ft.hide(offersFrag);
+        ft.add(R.id.fragment_container, mapFrag);
+        ft.hide(mapFrag);
+        ft.add(R.id.fragment_container, profileFrag);
+        ft.show(profileFrag); // first fragment to be shown to the player
+        ft.commit();
+        this.selectedFrag = profileFrag;
     }
 
+    // Initialise the map
     public void initMap() {
-        for (Location l : Location.values()) {
-            if (l == Location.TRAVELING) {
-                continue;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (Location l : Location.values()) {
+                    if (l == Location.TRAVELING) {
+                        continue;
+                    }
+                    ((MapFragment)mapFrag).getAdapter().add(new Kingdom((l)));
+                }
             }
-            this.map.add(new Kingdom((l)));
-        }
+        });
+
     }
 
+    // Launch 3 process that will make the game more alive
     private void lauchBackgroundProcess() {
 
         sch = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(3);
@@ -339,27 +437,17 @@ public class MainActivity extends AppCompatActivity {
                 // Randoms item for now
                 OFFER_CPT++;
 
-                if (!offersFrag.isVisible()) {
-                    if (listOffer.size() <= MAX_OFFERS) {
-                        Item item = items.getItems();
-                        listOffer.add(new Offer(OFFER_CPT, computeKarma(item), item));
-                    } else {
-                        listOffer.remove(0);
-                    }
-
-                } else {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (listOffer.size() <= MAX_OFFERS) {
-                                Item item = items.getItems();
-                                ((OffersFragment)offersFrag).getAdapter().add(new Offer(OFFER_CPT, computeKarma(item), item));
-                            } else {
-                                ((OffersFragment)offersFrag).getAdapter().remove(((OffersFragment)offersFrag).getAdapter().getItem(0));
-                            }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (listOffer.size() <= MAX_OFFERS) {
+                            Item item = items.getItems();
+                            ((OffersFragment) offersFrag).getAdapter().add(new Offer(OFFER_CPT, computeKarma(item), item));
+                        } else {
+                            ((OffersFragment) offersFrag).getAdapter().remove(((OffersFragment) offersFrag).getAdapter().getItem(0));
                         }
-                    });
-                }
+                    }
+                });
 
             }
         };
@@ -368,16 +456,18 @@ public class MainActivity extends AppCompatActivity {
         Runnable buyItems = new Runnable() {
             @Override
             public void run() {
+
                 if (shop.size() > 0) {
+                    List<Item> toBuy = new ArrayList<>();
                     for (Item i : shop) {
                         i.setTimeInShop(i.getTimeInShop() - 1);
-                    }
-                    for (int i = 0; i < shop.size(); i++) {
-                        if (shop.get(i).getTimeInShop() <= 0) {
-                            shop.get(i).setTimeInShop(0);
-                            buying(i);
-                            i--;
+                        if (i.getTimeInShop() <= 0) {
+                            i.setTimeInShop(0);
+                            toBuy.add(i);
                         }
+                    }
+                    if(!toBuy.isEmpty()){
+                        buying(toBuy);
                     }
                 }
             }
@@ -391,13 +481,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-
-        sch.scheduleAtFixedRate(offerMaker, 2, 10, TimeUnit.SECONDS);
-        sch.scheduleAtFixedRate(buyItems, 2, 2, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(offerMaker, 2, OFFER_RATE, TimeUnit.SECONDS);
+        sch.scheduleAtFixedRate(buyItems, 2, SHOP_TIC, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
 
     }
 
+    // Write an JsonObject into the save file
     private void writeJsonToFile(JSONObject save) {
         File file = new File(this.getFilesDir(), SAVE_FILENAME);
 
@@ -430,6 +520,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Read the save file and return its content (json format)
     private String readJsonFromFile(File f) {
         StringBuilder text = new StringBuilder();
         try {
@@ -528,34 +619,43 @@ public class MainActivity extends AppCompatActivity {
         return map;
     }
 
-    public void addToCollection(Item i) {
-        this.collection.add(i);
-    }
-
-    public void addToShop(Item i) {
-        this.shop.add(i);
-    }
-
-    public void buying(int position) {
-
-        if (!shopFrag.isVisible()) {
-            if (Kingdom.bonusOn(player.getLocation(), shop.get(position).getType())) {
-                int money = shop.get(position).getPrice() + Math.round((shop.get(position).getPrice() * PERCENTAGE_BONUS) / 100);
-                this.player.addGold(money);
-
-            } else {
-                this.player.addGold(shop.get(position).getPrice());
+    public void addToCollection(final Item i) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((CollectionFragment)collectionFrag).getAdapter().add(i);
             }
+        });
 
-            this.shop.remove(position);
+    }
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    majRemainingGold();
+    public void addToShop(final Item i) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((ShopFragment)shopFrag).getAdapter().add(i);
+            }
+        });
+    }
+
+    public void buying(final List<Item> toBuy) {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for(Item item : toBuy){
+                    if (Kingdom.bonusOn(player.getLocation(), item.getType())) {
+                        int money = item.getPrice() + Math.round((item.getPrice() * PERCENTAGE_BONUS) / 100);
+                        player.addGold(money);
+
+                    } else {
+                        player.addGold(item.getPrice());
+                    }
+                    ((ShopFragment)shopFrag).getAdapter().remove(item);
                 }
-            });
-        }
+                majRemainingGold();
+            }
+        });
 
     }
 

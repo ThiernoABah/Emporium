@@ -43,13 +43,13 @@ public class InitialiseItems {
         // Ingredients
         allItems.add(new Item("Crystal Gem Apple", 90000, Categories.INGREDIENT, Rarity.LEGENDARY, "Whoever eats the Crystal Gem Apple is teleported to the Crystal Dimension and given ultimate power over the Crystal Men until the gem leaves their body."));
         allItems.add(new Item("Glow Stone", 25000, Categories.INGREDIENT, Rarity.EPIC, "Unusually round stone which glows in a pale blue hue. Ancient people used it as a source of light"));
-        allItems.add(new Item("Lycanthrope Blood", 10000, Categories.INGREDIENT, Rarity.RARE, "Blood taken from a lycanthropy victim. There\\'s no telling if you can get infected with it"));
+        allItems.add(new Item("Lycanthrope Blood", 10000, Categories.INGREDIENT, Rarity.RARE, "Blood taken from a lycanthropy victim. There's no telling if you can get infected with it"));
         allItems.add(new Item("Ectoplasm", 30000, Categories.INGREDIENT, Rarity.EPIC, "Viscious substance with supernatural properties. A single drip gives you nightmares"));
         allItems.add(new Item("Mana Crystal", 8000, Categories.INGREDIENT, Rarity.RARE, "Shards of crystal containing magical energy. It emanates a faint bluish aura."));
         allItems.add(new Item("Focus Stone", 13000, Categories.INGREDIENT, Rarity.RARE, "Artificial stone used on constructions to generate a weak amount of mana. Might have other uses."));
         allItems.add(new Item("Honeycomb", 1000, Categories.INGREDIENT, Rarity.COMMON, "Chunk of raw honey collected by Stinger drones. I can tell it's very sweet."));
         allItems.add(new Item("Stubby Carrot", 900, Categories.INGREDIENT, Rarity.COMMON, "Giant piece of wild carrot. What on the realm made them to grow so big?"));
-        allItems.add(new Item("Beef Jerky", 600, Categories.INGREDIENT, Rarity.COMMON, "Hefty chunk of raw meat. Looks tender and juicy, but I won\\'t eat it raw."));
+        allItems.add(new Item("Beef Jerky", 600, Categories.INGREDIENT, Rarity.COMMON, "Hefty chunk of raw meat. Looks tender and juicy, but I won't eat it raw."));
         allItems.add(new Item("Regallium Flower", 400, Categories.INGREDIENT, Rarity.COMMON, "Small bell-shaped flower of a wild plant. Its fragrance is both soothing and relaxing"));
         allItems.add(new Item("Venom Extract", 500, Categories.INGREDIENT, Rarity.COMMON, "Extracted venom inside a tightly sealed vial. While poisonous, it's useless in this state."));
 

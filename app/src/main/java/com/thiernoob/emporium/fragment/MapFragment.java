@@ -138,5 +138,7 @@ public class MapFragment extends Fragment {
         sch.schedule(tripEnd,MIN_TRAVEL_TIME + r.nextInt(MAX_TRAVEL_TIME), TimeUnit.SECONDS);
     }
 
-
+    public MapAdapter getAdapter() {
+        return adapter;
+    }
 }
