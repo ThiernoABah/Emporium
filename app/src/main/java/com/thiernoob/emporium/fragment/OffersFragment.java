@@ -30,13 +30,11 @@ public class OffersFragment extends Fragment {
 
     private MainActivity activity;
     private Player player;
+
     private List<Offer> listOffer;
     private OfferAdapter adapter;
 
     private ListView lv;
-
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,19 +94,23 @@ public class OffersFragment extends Fragment {
     public void buy(int position){
         Item i = listOffer.get(position).getItem();
         int karma = listOffer.get(position).getKarma();
+
         if (player.getGold() >= i.getPrice()) {
             player.giveGold(i.getPrice());
             player.updateKarma(karma);
             adapter.remove(listOffer.get(position));
-
-
             activity.addToCollection(i);
             activity.majRemainingGold();
+
+            Context context = lv.getContext();
+            CharSequence text = "Added to collection";
+            Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+            toast.show();
+
         } else {
             Context context = lv.getContext();
             CharSequence text = "To poor for this...";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
+            Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
             toast.show();
         }
     }

@@ -3,7 +3,6 @@ package com.thiernoob.emporium;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -35,7 +34,7 @@ public class LogActivity extends AppCompatActivity {
 
         File file = new File(this.getFilesDir(), SAVE_FILENAME);
 
-
+        // If the player have a save it will load it else it will do the first connection
         if (file.exists()) {
             this.defaultLogIn();
         } else {
@@ -44,19 +43,17 @@ public class LogActivity extends AppCompatActivity {
 
     }
 
+    // First connection where the player choose his pseudo
     public void firstConnection() {
-
         pseudo = findViewById(R.id.pseudo);
         startButt = findViewById(R.id.startButt);
         pseudo.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
-
             @Override
             public void afterTextChanged(Editable s) {
                 if (s.length() > 0) {
@@ -74,6 +71,7 @@ public class LogActivity extends AppCompatActivity {
         });
     }
 
+    // Start the main game activity one the player choose his pseudo
     public void logIn() {
         Intent intent = new Intent(this, MainActivity.class);
         String p = pseudo.getText().toString();
@@ -87,6 +85,7 @@ public class LogActivity extends AppCompatActivity {
         startActivityForResult(intent, 1);
     }
 
+    // On reset to avoid loading the player with his old progression when he is starting over
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         this.startButt = null;

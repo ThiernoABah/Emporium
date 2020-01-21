@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class Player {
 
-    private final int STARTUP_GOLD = 20000;
+    private final int STARTUP_GOLD = 10000;
     private final int STARTUP_KARMA = 50;
 
     private static Player player = null;

@@ -29,8 +29,8 @@ public class ShopFragment extends Fragment {
 
     private Player player;
     private MainActivity activity;
-    private List<Item> shop;
 
+    private List<Item> shop;
     private ItemAdapter adapter;
 
     private ListView lv;
@@ -38,10 +38,11 @@ public class ShopFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activity = (MainActivity) getActivity();
-        player = Player.getPlayer();
-        shop = activity.getShop();
 
+        player = Player.getPlayer();
+        activity = (MainActivity) getActivity();
+
+        shop = activity.getShop();
         adapter = new ItemAdapter(this.getContext(),R.layout.offer_layout,shop);
     }
 
@@ -81,7 +82,6 @@ public class ShopFragment extends Fragment {
         });
         builder.setNeutralButton("No", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-
             }
         });
 
@@ -95,9 +95,9 @@ public class ShopFragment extends Fragment {
         adapter.remove(shop.get(position));
         activity.addToCollection(i);
         Context context = lv.getContext();
-        CharSequence text = "Move to collection";
-        int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(context, text, duration);
+
+        CharSequence text = "Added to collection";
+        Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
         toast.show();
     }
 

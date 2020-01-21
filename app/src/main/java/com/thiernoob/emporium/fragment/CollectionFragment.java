@@ -34,8 +34,8 @@ public class CollectionFragment extends Fragment {
 
     private Player player;
     private MainActivity activity;
-    private List<Item> collection;
 
+    private List<Item> collection;
     private ItemAdapter adapter;
 
     private ListView lv;

@@ -42,8 +42,8 @@ public class MapFragment extends Fragment {
 
     private Player player;
     private MainActivity activity;
-    private List<Kingdom> map;
 
+    private List<Kingdom> map;
     private MapAdapter adapter;
 
     private GridView gv;
@@ -117,12 +117,12 @@ public class MapFragment extends Fragment {
 
             }
         });
-
         AlertDialog dialog = builder.create();
 
         dialog.show();
     }
 
+    // travel task, manage the time between each destination
     public void travel(final Location position){
         Random r = new Random();
         Runnable tripEnd = new Runnable() {
@@ -138,7 +138,4 @@ public class MapFragment extends Fragment {
         sch.schedule(tripEnd,MIN_TRAVEL_TIME + r.nextInt(MAX_TRAVEL_TIME), TimeUnit.SECONDS);
     }
 
-    public MapAdapter getAdapter() {
-        return adapter;
-    }
 }

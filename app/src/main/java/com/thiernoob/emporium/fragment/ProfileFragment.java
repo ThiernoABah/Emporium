@@ -19,8 +19,15 @@ public class ProfileFragment extends Fragment {
 
     private Player player;
     private MainActivity activity;
+
     private Button reseter;
     private Button saver;
+
+    private TextView pseudo;
+    private TextView location;
+    private TextView karma;
+    private TextView gold;
+    private TextView aligement;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,18 +35,19 @@ public class ProfileFragment extends Fragment {
         activity = (MainActivity) getActivity();
         player = Player.getPlayer();
 
-
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_profile, container, false);
+
         ((TextView) v.findViewById(R.id.profilePseudo)).setText("Pseudo : " + player.getPseudo());
         ((TextView) v.findViewById(R.id.profileLocation)).setText("Location : " + player.getLocation().toString());
         ((TextView) v.findViewById(R.id.profileAlign)).setText("Aligment : " + player.getAlignment().toString());
         ((TextView) v.findViewById(R.id.profileKarma)).setText("Karma : " + player.getKarma());
         ((TextView) v.findViewById(R.id.profileGold)).setText("Gold : " + player.getGold() + " $");
+
         reseter = v.findViewById(R.id.resetButton);
         saver = v.findViewById(R.id.saveButton);
 
@@ -49,7 +57,6 @@ public class ProfileFragment extends Fragment {
                 activity.reset();
             }
         });
-
         saver.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -58,4 +65,13 @@ public class ProfileFragment extends Fragment {
         });
         return v;
     }
+
+    public void refresh(){
+        ((TextView) this.getView().findViewById(R.id.profilePseudo)).setText("Pseudo : " + player.getPseudo());
+        ((TextView) this.getView().findViewById(R.id.profileLocation)).setText("Location : " + player.getLocation().toString());
+        ((TextView) this.getView().findViewById(R.id.profileAlign)).setText("Aligment : " + player.getAlignment().toString());
+        ((TextView) this.getView().findViewById(R.id.profileKarma)).setText("Karma : " + player.getKarma());
+        ((TextView) this.getView().findViewById(R.id.profileGold)).setText("Gold : " + player.getGold() + " $");
+    }
+
 }

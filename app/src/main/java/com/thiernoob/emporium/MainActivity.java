@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private int FIRST_OFFERS = 5;
     private int SAVE_RATE = 25; // every 25 seconds there a save
     private int OFFER_RATE = 10; // new Offer every 10 seconds
-    private int SHOP_TIC = 25; // tick to count the time a item have to stay in the shop (using his time in shop attribute)
+    private int SHOP_TIC = 2; // tick to count the time a item have to stay in the shop (using his time in shop attribute)
 
     // Counter for the number of offers (using it to give an id to a offer)
     private int OFFER_CPT;
@@ -109,8 +109,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         player.destroy();
         if (this.sch != null) {
-            Log.d("on destroy", "destroy sch");
-            this.sch.shutdownNow();
+            this.sch.shutdownNow(); // to avoid thread running if the player is back to the logging screen and what to start over
         }
 
     }
@@ -175,6 +174,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                     ft.hide(selectedFrag).show(nextFrag).commit();
                     selectedFrag = nextFrag;
+
+                    if(selectedFrag.getId() == profileFrag.getId()){
+                        ((ProfileFragment)profileFrag).refresh();
+                    }
+
                     tutorial(menuItem.getItemId()); // if its the first time on a frag display a tutoriel to explain it
                     return true;
                 }
@@ -411,17 +415,14 @@ public class MainActivity extends AppCompatActivity {
 
     // Initialise the map
     public void initMap() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for (Location l : Location.values()) {
-                    if (l == Location.TRAVELING) {
-                        continue;
-                    }
-                    ((MapFragment)mapFrag).getAdapter().add(new Kingdom((l)));
-                }
+
+        for (Location l : Location.values()) {
+            if (l == Location.TRAVELING) {
+                continue;
             }
-        });
+            map.add(new Kingdom((l)));
+        }
+
 
     }
 
@@ -466,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
                             toBuy.add(i);
                         }
                     }
-                    if(!toBuy.isEmpty()){
+                    if (!toBuy.isEmpty()) {
                         buying(toBuy);
                     }
                 }
@@ -485,6 +486,79 @@ public class MainActivity extends AppCompatActivity {
         sch.scheduleAtFixedRate(buyItems, 2, SHOP_TIC, TimeUnit.SECONDS);
         sch.scheduleAtFixedRate(autoSave, 2, SAVE_RATE, TimeUnit.SECONDS);
 
+    }
+
+    // Used by the buying thread to buy items in the shop
+    public void buying(final List<Item> toBuy) {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (Item item : toBuy) {
+                    if (Kingdom.bonusOn(player.getLocation(), item.getType())) {
+                        int money = item.getPrice() + Math.round((item.getPrice() * PERCENTAGE_BONUS) / 100);
+                        player.addGold(money);
+
+                    } else {
+                        player.addGold(item.getPrice());
+                    }
+                    ((ShopFragment) shopFrag).getAdapter().remove(item);
+                }
+                majRemainingGold();
+            }
+        });
+
+    }
+
+    // Add an item to collection
+    public void addToCollection(final Item i) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((CollectionFragment) collectionFrag).getAdapter().add(i);
+            }
+        });
+
+    }
+
+    // Add an item to shop
+    public void addToShop(final Item i) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((ShopFragment) shopFrag).getAdapter().add(i);
+            }
+        });
+    }
+
+    public void majRemainingGold() {
+        this.mainRemainingGold.setText(this.player.getGold() + " $");
+    }
+
+    // First offers when you start the game
+    public void firstOffers(int nb) {
+        for (int i = 0; i < nb; i++) {
+            Item item = items.getItems();
+            this.listOffer.add(new Offer(i, this.computeKarma(item), item));
+        }
+    }
+
+    // Tools to see how much karma buying a item gets you
+    public int computeKarma(Item i) {
+
+        switch (i.getType()) {
+            case CONSUMABLE:
+                return 8;
+            case SPELL:
+                return rand.nextInt(20) - 10;
+            case SHIELD:
+                return -3;
+            case INGREDIENT:
+                return 1;
+            case WEAPON:
+                return -8;
+        }
+        return 0;
     }
 
     // Write an JsonObject into the save file
@@ -537,6 +611,7 @@ public class MainActivity extends AppCompatActivity {
         return text.toString();
     }
 
+    // Turn an Item into a JSON object
     private JSONObject saveItem(Item i) {
         // Transform an item is a JsonObject
         try {
@@ -558,6 +633,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    // Turn an Offer int a JSON Object
     private JSONObject saveOffer(Offer o) {
         // Transform an offer is a JsonObject
         try {
@@ -572,6 +648,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    // Turn a JSON Object representing an item into a Item
     private Item chargeItem(JSONObject jsItem) {
         try {
             int id = Integer.valueOf(jsItem.get("id").toString());
@@ -589,6 +666,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    // Turn a JSON Object representing an offer into a Offer
     private Offer chargeOffer(JSONObject offer) {
         try {
             int id = Integer.valueOf(offer.get("id").toString());
@@ -601,7 +679,6 @@ public class MainActivity extends AppCompatActivity {
         return null;
 
     }
-
 
     public List<Offer> getOffers() {
         return this.listOffer;
@@ -618,76 +695,5 @@ public class MainActivity extends AppCompatActivity {
     public List<Kingdom> getMap() {
         return map;
     }
-
-    public void addToCollection(final Item i) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((CollectionFragment)collectionFrag).getAdapter().add(i);
-            }
-        });
-
-    }
-
-    public void addToShop(final Item i) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((ShopFragment)shopFrag).getAdapter().add(i);
-            }
-        });
-    }
-
-    public void buying(final List<Item> toBuy) {
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for(Item item : toBuy){
-                    if (Kingdom.bonusOn(player.getLocation(), item.getType())) {
-                        int money = item.getPrice() + Math.round((item.getPrice() * PERCENTAGE_BONUS) / 100);
-                        player.addGold(money);
-
-                    } else {
-                        player.addGold(item.getPrice());
-                    }
-                    ((ShopFragment)shopFrag).getAdapter().remove(item);
-                }
-                majRemainingGold();
-            }
-        });
-
-    }
-
-    public void majRemainingGold() {
-        this.mainRemainingGold.setText(this.player.getGold() + " $");
-    }
-
-    public void firstOffers(int nb) {
-        Random rand = new Random();
-        for (int i = 0; i < nb; i++) {
-            //Item item = this.items.get(rand.nextInt(this.items.size())).clone();
-            Item item = items.getItems();
-            this.listOffer.add(new Offer(i, this.computeKarma(item), item));
-        }
-    }
-
-    public int computeKarma(Item i) {
-
-        switch (i.getType()) {
-            case CONSUMABLE:
-                return 8;
-            case SPELL:
-                return rand.nextInt(20) - 10;
-            case SHIELD:
-                return -3;
-            case INGREDIENT:
-                return 1;
-            case WEAPON:
-                return -8;
-        }
-        return 0;
-    }
-
 
 }
