@@ -516,6 +516,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 ((CollectionFragment) collectionFrag).getAdapter().add(i);
+                ((CollectionFragment) collectionFrag).refreshWorth();
             }
         });
 

@@ -168,11 +168,7 @@ public class CollectionFragment extends Fragment {
         i.setPrice(newPrice);
         adapter.remove(collection.get(position));
         activity.addToShop(i);
-        int cpt = 0;
-        for(Item a : collection){
-            cpt += a.getOriginalPrice();
-        }
-        worth.setText(cpt+" $");
+        this.refreshWorth();
     }
 
     private void setIcons(ImageView icon, int position){
@@ -197,5 +193,13 @@ public class CollectionFragment extends Fragment {
 
     public ItemAdapter getAdapter() {
         return adapter;
+    }
+
+    public void refreshWorth(){
+        int cpt = 0;
+        for(Item a : collection){
+            cpt += a.getOriginalPrice();
+        }
+        worth.setText(cpt+" $");
     }
 }
