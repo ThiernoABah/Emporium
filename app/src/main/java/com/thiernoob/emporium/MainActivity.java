@@ -188,18 +188,18 @@ public class MainActivity extends AppCompatActivity {
     public void tutorial(int id) {
         if (id == R.id.nav_collection && tutoCollection) {
             tutorialDialog("Collection Tutorial", "This is your collection, all the items you buy comes here, this is your treasure and if you want to sell an item you can do it from here just click on it.\n\n" +
-                    "Tips : Don't be too greedy when selling a item if you sell it at twice or more his original price he can take a while to be sold");
+                    "Tips : Don't be too greedy when selling an item if you sell it at twice or more of his original price he can take a while to be sold");
             tutoCollection = false;
         } else if (id == R.id.nav_map && tutoMap) {
             tutorialDialog("Map Tutorial", "This is the map, here you can travel from kingdom to kingdom, traveling can take a while." +
-                    "\n\nTips : Some kingdom like some kinds of items you will get a bonus if you sell the rights items while you are in the right kingdom.");
+                    "\n\nTips : Some kingdom like some kinds of items you will get a bonus if you sell the rights items in the right kingdom.");
             tutoMap = false;
         } else if (id == R.id.nav_shop && tutoShop) {
-            tutorialDialog("Shop Tutorial", "This is your shop all the items that you are selling appears here you can take them back to your collection if they are not sell." +
-                    "\nYour items will be selled over time just wait.");
+            tutorialDialog("Shop Tutorial", "This is your shop all the items that you are selling appears here you can take them back to your collection if you want." +
+                    "\n\nTips : Your items will be selled over time just wait.");
             tutoShop = false;
         } else if (id == R.id.nav_offer && tutoOffer) {
-            tutorialDialog("Offers Tutorial", "This is your offers here you receive offers from traveller some times if you are a lucky rare items may be proposed to you this is where you buy the items." +
+            tutorialDialog("Offers Tutorial", "This is your offers here you receive offers from travellers, some times if you are lucky a rare items may be proposed to you this is where you buy items." +
                     "\n\nTips : The type of a item is defined by the icon next to his name and each item have a rarity : Common items are green, Rare items are blue, Epic Items are purple and Legendary items orange.");
             tutoOffer = false;
         }
