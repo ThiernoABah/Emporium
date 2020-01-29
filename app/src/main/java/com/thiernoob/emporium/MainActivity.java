@@ -167,7 +167,6 @@ public class MainActivity extends AppCompatActivity {
                         case R.id.nav_profile:
                             nextFrag = profileFrag;
                             break;
-
                     }
                     if (nextFrag == null) {
                         return false;
@@ -178,8 +177,7 @@ public class MainActivity extends AppCompatActivity {
                     if(selectedFrag.getId() == profileFrag.getId()){
                         ((ProfileFragment)profileFrag).refresh();
                     }
-
-                    tutorial(menuItem.getItemId()); // if its the first time on a frag display a tutoriel to explain it
+                    tutorial(menuItem.getItemId()); // if its the first time on a frag display a tutorial to explain it
                     return true;
                 }
             };
